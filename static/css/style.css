@@ -1,0 +1,130 @@
+/* Custom styles for Face Attendance System */
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-brand {
+    font-weight: 600;
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.badge {
+    font-weight: 500;
+}
+
+/* Camera specific styles */
+.camera-container {
+    border: 2px solid #dee2e6;
+}
+
+.detection-stats {
+    transition: all 0.3s ease;
+}
+
+.detection-stats:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+/* Table styles */
+.table {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table thead th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+}
+
+/* Alert styles */
+.alert {
+    border: none;
+    border-radius: 8px;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .camera-feed {
+        height: 300px;
+        object-fit: cover;
+    }
+}
+
+/* Loading animation */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Status indicators */
+.status-online {
+    color: #28a745;
+}
+
+.status-offline {
+    color: #dc3545;
+}
+
+.status-warning {
+    color: #ffc107;
+}
+
+/* Person image preview */
+.person-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #dee2e6;
+}
+
+/* Confidence badges */
+.confidence-high {
+    background-color: #28a745 !important;
+}
+
+.confidence-medium {
+    background-color: #ffc107 !important;
+}
+
+.confidence-low {
+    background-color: #dc3545 !important;
+}

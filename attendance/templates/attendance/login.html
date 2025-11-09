@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Sistema de Asistencia Inteligente</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow: hidden;
+        }
+
+        /* Barra superior oscura */
+        .top-bar {
+            background: #2c3e50;
+            color: white;
+            padding: 18px 40px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .admin-dropdown {
+            background: rgba(255,255,255,0.15);
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .admin-dropdown:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* Contenedor principal con degradado */
+        .main-container {
+            background: linear-gradient(135deg, #7B5FFF 0%, #9D7EFF 50%, #B68FFF 100%);
+            height: calc(100vh - 70px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 20px;
+        }
+
+        /* Efectos de fondo animados */
+        .background-effects {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .circle:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: -150px;
+            left: -150px;
+            animation-delay: 0s;
+        }
+
+        .circle:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            top: 50%;
+            right: -100px;
+            animation-delay: 2s;
+        }
+
+        .circle:nth-child(3) {
+            width: 150px;
+            height: 150px;
+            bottom: -75px;
+            left: 30%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        /* Contenedor de login */
+        .login-container {
+            position: relative;
+            z-index: 5;
+            max-width: 450px;
+            width: 100%;
+        }
+
+        /* Card de bienvenida */
+        .welcome-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 2px;
+            padding: 60px 50px 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .welcome-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Icono principal */
+        .main-icon {
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.25);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+            padding: 15px;
+        }
+
+        .main-icon::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: rotate(45deg) translateX(-100%); }
+            50% { transform: rotate(45deg) translateX(100%); }
+            100% { transform: rotate(45deg) translateX(100%); }
+        }
+
+        .main-icon img {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+            z-index: 2;
+            position: relative;
+            filter: brightness(0) invert(1);
+            transition: all 0.3s ease;
+        }
+
+        .main-icon:hover img {
+            transform: scale(1.1);
+        }
+
+        .welcome-title {
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .welcome-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        /* Botón de iniciar sesión */
+        .login-button {
+            background: linear-gradient(135deg, #4A90FF 0%, #6B73FF 100%);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 10px 20px rgba(74, 144, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .login-button:hover::before {
+            left: 100%;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(74, 144, 255, 0.4);
+        }
+
+        .login-button:active {
+            transform: translateY(0px);
+        }
+
+        /* Modal de login */
+        .login-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .login-modal.show {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .login-form-container {
+            background: white;
+            border-radius: 20px;
+            padding: 50px 45px;
+            width: 450px;
+            max-width: 90vw;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .close-button {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #999;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-button:hover {
+            color: #333;
+        }
+
+        .login-form-title {
+            text-align: center;
+            color: #333;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 35px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            color: #555;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #7B5FFF;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(123, 95, 255, 0.1);
+        }
+
+        .forgot-password {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .forgot-password a {
+            color: #7B5FFF;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+
+        .submit-button {
+            width: 100%;
+            background: linear-gradient(135deg, #7B5FFF 0%, #9D7EFF 100%);
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(123, 95, 255, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 15px;
+            }
+
+            .welcome-card {
+                padding: 40px 30px 30px;
+                margin-bottom: 20px;
+            }
+
+            .welcome-title {
+                font-size: 1.6rem;
+            }
+
+            .welcome-subtitle {
+                font-size: 1rem;
+            }
+
+            .main-icon {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 25px;
+                padding: 12px;
+            }
+
+            .main-icon img {
+                width: 76px;
+                height: 76px;
+            }
+
+            .login-form-container {
+                padding: 40px 30px;
+            }
+        }
+    </style>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Barra superior -->
+    <div class="top-bar">
+        <span>Sistema de Asistencia Inteligente</span>
+        <div class="admin-dropdown" onclick="window.location.href='/admin/'">
+            admin <i class="fas fa-chevron-down" style="margin-left: 5px; font-size: 0.8rem;"></i>
+        </div>
+    </div>
+
+    <!-- Contenedor principal -->
+    <div class="main-container">
+        <!-- Efectos de fondo -->
+        <div class="background-effects">
+            <div class="circle"></div>
+            <div class="circle"></div>
+            <div class="circle"></div>
+        </div>
+
+        <!-- Contenedor de login -->
+        <div class="login-container">
+            <!-- Card de bienvenida -->
+            <div class="welcome-card">
+                <div class="main-icon">
+                    <img src="https://i.ibb.co/hqQSTgG/asistencia.png" alt="Sistema de Asistencia" />
+                </div>
+                <h1 class="welcome-title">Sistema de Asistencia y Control Inteligente</h1>
+                <p class="welcome-subtitle">Administración de asistencia y monitoreo de participación.</p>
+                <button class="login-button" onclick="showLoginModal()">
+                    Iniciar sesión
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de login -->
+    <div class="login-modal" id="loginModal">
+        <div class="login-form-container">
+            <button class="close-button" onclick="hideLoginModal()">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <h2 class="login-form-title">Iniciar Sesión</h2>
+            
+            <form method="post" action="{% url 'attendance:login' %}">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label class="form-label" for="username">
+                        <i class="fas fa-user"></i> Usuario
+                    </label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-input" 
+                        placeholder="admin"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">
+                        <i class="fas fa-lock"></i> Contraseña
+                    </label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input" 
+                        placeholder="•••"
+                        required
+                    >
+                </div>
+
+                <div class="forgot-password">
+                    <a href="#" onclick="alert('Contacte al administrador del sistema')">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+                </div>
+
+                <button type="submit" class="submit-button">
+                    Iniciar Sesión
+                </button>
+            </form>
+
+            {% if error_message %}
+                <div style="color: #e74c3c; text-align: center; margin-top: 15px; font-size: 0.9rem;">
+                    {{ error_message }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.add('show');
+            document.getElementById('username').focus();
+        }
+
+        function hideLoginModal() {
+            document.getElementById('loginModal').classList.remove('show');
+        }
+
+        // Cerrar modal con ESC
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                hideLoginModal();
+            }
+        });
+
+        // Cerrar modal clickeando fuera
+        document.getElementById('loginModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                hideLoginModal();
+            }
+        });
+
+        // Auto-mostrar modal si hay errores
+        {% if error_message %}
+            showLoginModal();
+        {% endif %}
+    </script>
+</body>
+</html>

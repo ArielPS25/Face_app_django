@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Reportes - Sistema de Asistencia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        /* Barra superior oscura */
+        .top-bar {
+            background: #2c3e50;
+            color: white;
+            padding: 18px 40px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Contenedor principal con degradado */
+        .main-container {
+            background: linear-gradient(135deg, #7B5FFF 0%, #9D7EFF 50%, #B68FFF 100%);
+            min-height: calc(100vh - 60px);
+            padding: 50px 40px;
+            position: relative;
+        }
+
+        /* Botón regresar */
+        .btn-regresar {
+            position: absolute;
+            top: 40px;
+            right: 50px;
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 28px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .btn-regresar:hover {
+            background: #34495e;
+            transform: translateY(-2px);
+            text-decoration: none;
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-top: 20px;
+        }
+
+        /* Título principal */
+        .reports-title {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .reports-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        /* Panel de filtros */
+        .filter-panel {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-title {
+            color: #2c3e50;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-input {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #7B5FFF;
+            box-shadow: 0 0 0 3px rgba(123, 95, 255, 0.1);
+        }
+
+        .filter-btn {
+            background: #7B5FFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: fit-content;
+        }
+
+        .filter-btn:hover {
+            background: #6B4FDF;
+            transform: translateY(-2px);
+        }
+
+        /* Estadísticas superiores */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .stat-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* Tabla de reportes */
+        .reports-table-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+        }
+
+        .table-header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .table-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .record-count {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+
+        .table-content {
+            overflow-x: auto;
+        }
+
+        .reports-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .reports-table th {
+            background: #f8f9fa;
+            padding: 15px 12px;
+            text-align: center;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .reports-table td {
+            padding: 15px 12px;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .reports-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .student-photo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .photo-placeholder {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #dee2e6;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+        }
+
+        .student-info {
+            text-align: left;
+        }
+
+        .student-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 2px;
+        }
+
+        .student-email {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .badge-info { background: #17a2b8; }
+        .badge-secondary { background: #6c757d; }
+        .badge-primary { background: #007bff; }
+        .badge-warning { background: #ffc107; color: #212529; }
+        .badge-success { background: #28a745; }
+        .badge-danger { background: #dc3545; }
+
+        /* Botón de exportación */
+        .export-section {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .export-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .export-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .top-bar {
+                padding: 15px 20px;
+            }
+
+            .main-container {
+                padding: 30px 20px;
+            }
+
+            .btn-regresar {
+                position: static;
+                margin-bottom: 30px;
+                width: 100%;
+                text-align: center;
+            }
+
+            .reports-title {
+                font-size: 2rem;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+            }
+
+            .table-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .reports-table {
+                font-size: 0.85rem;
+            }
+
+            .reports-table th,
+            .reports-table td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra Superior -->
+    <div class="top-bar">
+        <span style="cursor: pointer;" onclick="window.location.href='{% url 'attendance:home' %}'">Sistema de Asistencia Inteligente</span>
+        <div class="user-info">{{ user.username }}</div>
+    </div>
+
+    <div class="main-container">
+        <!-- Botón Regresar -->
+        <button class="btn-regresar" onclick="window.location.href='{% url 'attendance:home' %}'">Regresar</button>
+        
+        <div class="container">
+            <!-- Título Principal -->
+            <h1 class="reports-title">
+                <i class="fas fa-chart-bar"></i>
+                Dashboard de Reportes
+            </h1>
+            <p class="reports-subtitle">Análisis detallado de asistencia y participación</p>
+            
+            <!-- Panel de Filtros -->
+            <div class="filter-panel">
+                <h3 class="filter-title">
+                    <i class="fas fa-filter"></i>
+                    Filtros de Consulta
+                </h3>
+                <form method="get" class="filter-grid">
+                    <div class="form-group">
+                        <label for="date_from" class="form-label">Fecha Desde</label>
+                        <input type="date" class="form-input" id="date_from" name="date_from" 
+                               value="{{ start_date|date:'Y-m-d' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="date_to" class="form-label">Fecha Hasta</label>
+                        <input type="date" class="form-input" id="date_to" name="date_to" 
+                               value="{{ end_date|date:'Y-m-d' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="curso" class="form-label">Filtrar por Curso</label>
+                        <select class="form-input" id="curso" name="curso">
+                            <option value="">Todos los cursos</option>
+                            {% for curso in cursos %}
+                            <option value="{{ curso }}" {% if curso_filter == curso %}selected{% endif %}>
+                                {{ curso }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="filter-btn">
+                            <i class="fas fa-search"></i>
+                            Filtrar Datos
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tabla Principal de Estudiantes -->
+            <div class="reports-table-container">
+                <div class="table-header">
+                    <h3 class="table-title">
+                        <i class="fas fa-table"></i>
+                        Reporte Detallado por Estudiante
+                    </h3>
+                    <span class="record-count">{{ students_data|length }} registros</span>
+                </div>
+                <div class="table-content">
+                    <table class="reports-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Foto</th>
+                                <th>Estudiante</th>
+                                <th>Curso</th>
+                                <th>Aula</th>
+                                <th>Sesiones</th>
+                                <th>Asistencia</th>
+                                <th>Participación</th>
+                                <th>% Asistencia</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students_data %}
+                            <tr>
+                                <td><strong>{{ forloop.counter }}</strong></td>
+                                <td>
+                                    {% if student.foto %}
+                                    <img src="{{ student.foto.image.url }}" 
+                                         alt="{{ student.nombres }}"
+                                         class="student-photo">
+                                    {% else %}
+                                    <div class="photo-placeholder">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td class="student-info">
+                                    <div class="student-name">{{ student.nombres }} {{ student.apellidos }}</div>
+                                    {% if student.email %}
+                                    <div class="student-email">{{ student.email }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-info">{{ student.curso|default:"No asignado" }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-secondary">{{ student.aula|default:"No asignada" }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-primary">{{ student.asistencias }}</span>
+                                </td>
+                                <td>
+                                    <span style="font-size: 1.5rem;">{{ student.asistencia_status|default:"❌" }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-warning">{{ student.participaciones }}</span>
+                                </td>
+                                <td>
+                                    {% if student.asistencia_pct >= 80 %}
+                                        <span class="badge badge-success">{{ student.asistencia_pct }}%</span>
+                                    {% elif student.asistencia_pct >= 60 %}
+                                        <span class="badge badge-warning">{{ student.asistencia_pct }}%</span>
+                                    {% else %}
+                                        <span class="badge badge-danger">{{ student.asistencia_pct }}%</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="9" style="text-align: center; padding: 40px; color: #6c757d;">
+                                    <i class="fas fa-search" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
+                                    No se encontraron datos para el período seleccionado
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            <!-- Botón de Exportación -->
+            <div class="export-section">
+                <button class="export-btn" onclick="exportToCSV()">
+                    <i class="fas fa-download"></i>
+                    Exportar a CSV
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FontAwesome y SweetAlert -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+    function exportToCSV() {
+        // Función para exportar datos a CSV
+        const table = document.querySelector('.reports-table');
+        const rows = table.querySelectorAll('tr');
+        let csv = [];
+        
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const cols = row.querySelectorAll('td, th');
+            let csvRow = [];
+            
+            for (let j = 0; j < cols.length; j++) {
+                let cellText = cols[j].innerText.trim();
+                // Limpiar emojis y caracteres especiales para CSV
+                cellText = cellText.replace(/[✅❌]/g, cellText.includes('✅') ? 'SI' : 'NO');
+                csvRow.push('"' + cellText + '"');
+            }
+            csv.push(csvRow.join(','));
+        }
+        
+        const csvString = csv.join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('hidden', '');
+        a.setAttribute('href', url);
+        a.setAttribute('download', 'reporte_asistencia_' + new Date().toISOString().split('T')[0] + '.csv');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        // Mostrar notificación de éxito
+        Swal.fire({
+            title: '¡Exportado!',
+            text: 'El reporte se ha descargado exitosamente',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    }
+
+    // Auto-actualizar cada 30 segundos
+    setInterval(function() {
+        if (document.visibilityState === 'visible') {
+            location.reload();
+        }
+    }, 30000);
+    </script>
+</body>
+</html>

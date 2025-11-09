@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Principal - Sistema de Asistencia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        /* Barra superior oscura */
+        .top-bar {
+            background: #2c3e50;
+            color: white;
+            padding: 18px 40px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .user-info:hover {
+            color: rgba(255, 255, 255, 1);
+        }
+
+        /* Contenedor principal con degradado */
+        .main-container {
+            background: linear-gradient(135deg, #7B5FFF 0%, #9D7EFF 50%, #B68FFF 100%);
+            min-height: calc(100vh - 60px);
+            padding: 50px 40px;
+            position: relative;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-top: 20px;
+        }
+
+        /* Título principal */
+        .home-title {
+            color: white;
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .home-subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        /* Estadísticas superiores */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .stat-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* Tarjetas de módulos principales */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .module-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .module-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .module-icon {
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            background: transparent !important;
+        }
+
+        .module-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .module-description {
+            color: #666;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .module-btn {
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 15px 30px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .module-btn:hover {
+            background: #34495e;
+            transform: translateY(-2px);
+        }
+
+        /* Panel de administración */
+        .admin-panel {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .admin-panel-content {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .admin-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #2c3e50;
+            flex-shrink: 0;
+        }
+
+        .admin-info {
+            flex: 1;
+        }
+
+        .admin-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .admin-desc {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .admin-btn {
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .admin-btn:hover {
+            background: #34495e;
+            transform: translateY(-2px);
+            text-decoration: none;
+            color: white;
+        }
+
+        /* Sesión activa */
+        .active-session {
+            background: rgba(46, 204, 113, 0.1);
+            border: 2px solid #2ecc71;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+
+        .session-title {
+            color: #27ae60;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .session-info {
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .top-bar {
+                padding: 15px 20px;
+            }
+
+            .main-container {
+                padding: 30px 20px;
+            }
+
+            .home-title {
+                font-size: 2.2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+            }
+
+            .modules-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .module-card {
+                padding: 30px 25px;
+            }
+
+            .admin-panel-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Barra Superior -->
+    <div class="top-bar">
+        <span style="cursor: pointer;" onclick="window.location.href='{% url 'attendance:home' %}'">Sistema de Asistencia Inteligente</span>
+        <div class="user-info" onclick="window.location.href='{% url 'attendance:logout' %}'">
+            {{ user.username }} <i class="fas fa-sign-out-alt" style="margin-left: 5px; font-size: 0.9rem;"></i>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="container">
+            <!-- Título Principal -->
+            <h1 class="home-title">Panel Principal</h1>
+            <p class="home-subtitle">Módulos del Sistema</p>
+
+
+            <!-- Módulos Principales -->
+            <div class="modules-grid">
+                <!-- Gestión de Usuarios -->
+                <a href="{% url 'attendance:management_dashboard' %}" class="module-card">
+                    <div class="module-icon">
+                        <img src="https://cdn-icons-png.flaticon.com/128/2683/2683665.png" alt="Gestión de Usuarios" style="width: 90px; height: 90px; object-fit: contain;">
+                    </div>
+                    <h2 class="module-title">Gestión de Usuarios</h2>
+                    <p class="module-description">Administración de estudiantes, cursos y herramientas del sistema con matrícula y asignación de cursos.</p>
+                    <button class="module-btn">Acceder al Módulo</button>
+                </a>
+
+                <!-- Reportes y Estadísticas -->
+                <a href="{% url 'attendance:reports_dashboard' %}" class="module-card">
+                    <div class="module-icon">
+                        <img src="https://cdn-icons-png.flaticon.com/128/9909/9909927.png" alt="Reportes" style="width: 90px; height: 90px; object-fit: contain;">
+                    </div>
+                    <h2 class="module-title">Reportes y Estadísticas</h2>
+                    <p class="module-description">Generación de informes sobre asistencia y participación en el curso con exportación de datos.</p>
+                    <button class="module-btn">Ver Reportes</button>
+                </a>
+
+                <!-- Monitoreo en Tiempo Real -->
+                <a href="{% url 'attendance:camera' %}" class="module-card">
+                    <div class="module-icon">
+                        <img src="https://cdn-icons-png.freepik.com/512/17364/17364852.png" alt="Cámara" style="width: 90px; height: 90px; object-fit: contain;">
+                    </div>
+                    <h2 class="module-title">Monitoreo en Tiempo Real</h2>
+                    <p class="module-description">Seguimiento de asistencia y participación mediante reconocimiento facial y detección de gestos.</p>
+                    <button class="module-btn">Activar Cámara</button>
+                </a>
+            </div>
+
+
+            <!-- Sesión Activa -->
+            {% if active_session %}
+            <div class="active-session">
+                <h3 class="session-title">
+                    <i class="fas fa-play-circle"></i>
+                    Sesión Activa: {{ active_session.name }}
+                </h3>
+                <p class="session-info">
+                    <strong>Fecha:</strong> {{ active_session.date }} |
+                    <strong>Hora de Inicio:</strong> {{ active_session.start_time }} |
+                    <strong>Asistentes:</strong> {{ active_session.get_attendance_count }} |
+                    <strong>Participaciones:</strong> {{ active_session.get_participation_count }}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- FontAwesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</body>
+</html>

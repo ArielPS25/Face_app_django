@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cámara de Reconocimiento - Sistema de Asistencia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        /* Barra superior oscura */
+        .top-bar {
+            background: #2c3e50;
+            color: white;
+            padding: 18px 40px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Contenedor principal con degradado */
+        .main-container {
+            background: linear-gradient(135deg, #7B5FFF 0%, #9D7EFF 50%, #B68FFF 100%);
+            min-height: calc(100vh - 60px);
+            padding: 50px 40px;
+            position: relative;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-top: 20px;
+        }
+
+        /* Header */
+        .header-section {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .main-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Botón regresar */
+        .btn-regresar {
+            position: absolute;
+            top: 40px;
+            right: 50px;
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 28px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .btn-regresar:hover {
+            background: #34495e;
+            transform: translateY(-2px);
+        }
+
+        /* Panel de control */
+        .control-panel {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .control-header {
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .status-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-indicator {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .status-running {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            animation: pulse 2s infinite;
+        }
+
+        .status-stopped {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .status-text {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* Botones de control */
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: linear-gradient(45deg, #218838, #1da88a);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: linear-gradient(45deg, #c82333, #a71e2a);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+        }
+
+        /* Estadísticas */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Contenedor principal del contenido */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        /* Cámara */
+        .camera-panel {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+        }
+
+        .camera-container {
+            position: relative;
+            background: #000;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .camera-feed {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .camera-placeholder {
+            text-align: center;
+            color: #6c757d;
+            padding: 60px 20px;
+        }
+
+        .camera-placeholder i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.6;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            min-width: 150px;
+        }
+
+        .overlay-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .overlay-item:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Sidebar */
+        .sidebar-panels {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-panel {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .sidebar-content {
+            padding: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-badge {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .badge-success { background: linear-gradient(45deg, #28a745, #20c997); }
+        .badge-info { background: linear-gradient(45deg, #17a2b8, #007bff); }
+
+        .activity-time {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        /* Panel de instrucciones */
+        .instructions-panel {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border-left: 4px solid #17a2b8;
+        }
+
+        .instructions-title {
+            color: #17a2b8;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .instructions-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .instructions-list li {
+            margin-bottom: 12px;
+            padding-left: 25px;
+            position: relative;
+            color: #495057;
+        }
+
+        .instructions-list li::before {
+            content: "•";
+            color: #17a2b8;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar-panels {
+                flex-direction: row;
+            }
+
+            .sidebar-panel {
+                flex: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .top-bar {
+                padding: 15px 20px;
+            }
+
+            .main-container {
+                padding: 30px 20px;
+            }
+
+            .main-title {
+                font-size: 2rem;
+            }
+
+            .btn-regresar {
+                position: static;
+                margin-bottom: 30px;
+                width: 100%;
+                text-align: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .control-content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .control-buttons {
+                justify-content: center;
+            }
+
+            .sidebar-panels {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Barra superior -->
+    <div class="top-bar">
+        <div style="cursor: pointer;" onclick="window.location.href='{% url 'attendance:home' %}'">Sistema de Asistencia Inteligente</div>
+        <div class="user-info">{{ user.username }}</div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="main-container">
+        <!-- Botón Regresar -->
+        <button class="btn-regresar" onclick="window.location.href='{% url 'attendance:home' %}'">Regresar</button>
+        
+        <div class="container">
+            <!-- Header -->
+            <div class="header-section">
+                <h1 class="main-title">
+                    <i class="fas fa-video"></i>
+                    Cámara de Reconocimiento
+                </h1>
+                <p class="subtitle">Detección facial y de gestos en tiempo real</p>
+            </div>
+
+            <!-- Panel de control -->
+            <div class="control-panel">
+                <div class="control-header">
+                    <i class="fas fa-sliders-h"></i>
+                    Controles de Cámara
+                </div>
+                <div class="control-content">
+                    <div class="status-section">
+                        <span class="status-indicator status-stopped" id="statusIndicator"></span>
+                        <span class="status-text" id="statusText">Inicializando...</span>
+                    </div>
+                    <div class="control-buttons">
+                        <button id="startBtn" class="btn btn-success">
+                            <i class="fas fa-play"></i>
+                            Iniciar Detección
+                        </button>
+                        <button id="stopBtn" class="btn btn-danger" disabled>
+                            <i class="fas fa-stop"></i>
+                            Detener Detección
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estadísticas de detección -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="stat-number" id="attendanceCount">0</div>
+                    <div class="stat-label">Asistencia Hoy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(45deg, #17a2b8, #007bff);">
+                        <i class="fas fa-hand-paper"></i>
+                    </div>
+                    <div class="stat-number" id="participationCount">0</div>
+                    <div class="stat-label">Participación Hoy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(45deg, #ffc107, #fd7e14);">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <div class="stat-number" id="facesDetected">0</div>
+                    <div class="stat-label">Rostros Detectados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: linear-gradient(45deg, #e83e8c, #6f42c1);">
+                        <i class="fas fa-hand-rock"></i>
+                    </div>
+                    <div class="stat-number" id="handsDetected">0</div>
+                    <div class="stat-label">Manos Alzadas</div>
+                </div>
+            </div>
+
+            <!-- Contenido principal -->
+            <div class="content-grid">
+                <!-- Panel de cámara -->
+                <div class="camera-panel">
+                    <div class="panel-header">
+                        <i class="fas fa-video"></i>
+                        Transmisión en Vivo
+                    </div>
+                    <div class="camera-container">
+                        <img id="cameraFeed" 
+                             src="{% url 'attendance:camera_feed' %}" 
+                             class="camera-feed" 
+                             alt="Camera Feed"
+                             style="display: none;">
+                        
+                        <div id="cameraPlaceholder" class="camera-placeholder">
+                            <i class="fas fa-camera"></i>
+                            <h4 style="color: #6c757d; margin-top: 20px;">Cámara Desactivada</h4>
+                            <p>Haga clic en "Iniciar Detección" para comenzar</p>
+                        </div>
+                        
+                        <div class="camera-overlay" id="cameraOverlay" style="display: none;">
+                            <div class="overlay-item">
+                                <span>Estado:</span>
+                                <span id="overlayStatus">Detenido</span>
+                            </div>
+                            <div class="overlay-item">
+                                <span>Rostros:</span>
+                                <span id="overlayFaces">0</span>
+                            </div>
+                            <div class="overlay-item">
+                                <span>Manos:</span>
+                                <span id="overlayHands">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sidebar -->
+                <div class="sidebar-panels">
+                    <!-- Asistencia reciente -->
+                    <div class="sidebar-panel">
+                        <div class="panel-header">
+                            <i class="fas fa-user-check"></i>
+                            Asistencia Reciente
+                        </div>
+                        <div class="sidebar-content">
+                            <div id="recentAttendance">
+                                <div style="text-align: center; color: #6c757d; padding: 20px;">
+                                    No hay registros recientes
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Participación reciente -->
+                    <div class="sidebar-panel">
+                        <div class="panel-header">
+                            <i class="fas fa-hand-paper"></i>
+                            Participación Reciente
+                        </div>
+                        <div class="sidebar-content">
+                            <div id="recentParticipation">
+                                <div style="text-align: center; color: #6c757d; padding: 20px;">
+                                    No hay participación reciente
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de instrucciones -->
+            <div class="instructions-panel">
+                <div class="instructions-title">
+                    <i class="fas fa-info-circle"></i>
+                    Instrucciones de Uso
+                </div>
+                <ul class="instructions-list">
+                    <li><strong>Asistencia:</strong> Mire directamente a la cámara durante 1 segundo para registrar su asistencia</li>
+                    <li><strong>Participación:</strong> Levante su mano con la palma abierta hacia la cámara</li>
+                    <li><strong>Detección:</strong> Los cuadros verdes indican rostros reconocidos, los círculos azules muestran manos alzadas</li>
+                    <li><strong>Estado:</strong> Observe la superposición para información de detección en tiempo real</li>
+                    <li><strong>Consejos:</strong> Manténgase bien iluminado y a una distancia apropiada de la cámara</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <script>
+        let detectionInterval;
+        let isRunning = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus();
+            
+            // Event listeners para los botones
+            document.getElementById('startBtn').addEventListener('click', startDetection);
+            document.getElementById('stopBtn').addEventListener('click', stopDetection);
+            
+            // Verificar estado periódicamente
+            detectionInterval = setInterval(updateStatus, 2000);
+        });
+
+        function startDetection() {
+            fetch('{% url "attendance:start_detection" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'started' || data.status === 'already_running') {
+                    isRunning = true;
+                    document.getElementById('cameraFeed').style.display = 'block';
+                    document.getElementById('cameraPlaceholder').style.display = 'none';
+                    document.getElementById('cameraOverlay').style.display = 'block';
+                    updateUI();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al iniciar la detección de cámara');
+            });
+        }
+
+        function stopDetection() {
+            fetch('{% url "attendance:stop_detection" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                isRunning = false;
+                document.getElementById('cameraFeed').style.display = 'none';
+                document.getElementById('cameraPlaceholder').style.display = 'flex';
+                document.getElementById('cameraOverlay').style.display = 'none';
+                updateUI();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al detener la detección de cámara');
+            });
+        }
+
+        function updateStatus() {
+            fetch('{% url "attendance:detection_status" %}')
+            .then(response => response.json())
+            .then(data => {
+                isRunning = data.is_running;
+                
+                // Actualizar estadísticas
+                document.getElementById('attendanceCount').textContent = data.attendance_today.length;
+                document.getElementById('participationCount').textContent = data.participation_today.length;
+                document.getElementById('facesDetected').textContent = data.faces_detected;
+                document.getElementById('handsDetected').textContent = data.hands_detected;
+                
+                // Actualizar overlay
+                document.getElementById('overlayStatus').textContent = isRunning ? 'Activo' : 'Detenido';
+                document.getElementById('overlayFaces').textContent = data.faces_detected;
+                document.getElementById('overlayHands').textContent = data.hands_detected;
+                
+                // Actualizar listas recientes
+                updateRecentLists(data.attendance_today, data.participation_today);
+                
+                updateUI();
+            })
+            .catch(error => {
+                console.error('Error al obtener el estado:', error);
+            });
+        }
+
+        function updateRecentLists(attendance, participation) {
+            // Actualizar asistencia reciente
+            const attendanceContainer = document.getElementById('recentAttendance');
+            let attendanceHtml = '';
+            
+            if (attendance.length > 0) {
+                attendance.slice(-5).reverse().forEach(function(name) {
+                    attendanceHtml += `
+                        <div class="activity-item">
+                            <span class="activity-badge badge-success">${name}</span>
+                            <span class="activity-time">Ahora</span>
+                        </div>
+                    `;
+                });
+            } else {
+                attendanceHtml = '<div style="text-align: center; color: #6c757d; padding: 20px;">No hay registros recientes</div>';
+            }
+            attendanceContainer.innerHTML = attendanceHtml;
+            
+            // Actualizar participación reciente
+            const participationContainer = document.getElementById('recentParticipation');
+            let participationHtml = '';
+            
+            if (participation.length > 0) {
+                participation.slice(-5).reverse().forEach(function(name) {
+                    participationHtml += `
+                        <div class="activity-item">
+                            <span class="activity-badge badge-info">${name}</span>
+                            <span class="activity-time">Ahora</span>
+                        </div>
+                    `;
+                });
+            } else {
+                participationHtml = '<div style="text-align: center; color: #6c757d; padding: 20px;">No hay participación reciente</div>';
+            }
+            participationContainer.innerHTML = participationHtml;
+        }
+
+        function updateUI() {
+            const statusIndicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            
+            if (isRunning) {
+                statusIndicator.className = 'status-indicator status-running';
+                statusText.textContent = 'Detección Activa';
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+            } else {
+                statusIndicator.className = 'status-indicator status-stopped';
+                statusText.textContent = 'Detección Detenida';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+            }
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Limpiar al salir de la página
+        window.addEventListener('beforeunload', function() {
+            if (detectionInterval) {
+                clearInterval(detectionInterval);
+            }
+        });
+    </script>
+</body>
+</html>

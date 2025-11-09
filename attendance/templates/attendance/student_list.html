@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Estudiantes - Sistema de Asistencia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        /* Barra superior oscura */
+        .top-bar {
+            background: #2c3e50;
+            color: white;
+            padding: 18px 40px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Contenedor principal con degradado */
+        .main-container {
+            background: linear-gradient(135deg, #7B5FFF 0%, #9D7EFF 50%, #B68FFF 100%);
+            min-height: calc(100vh - 60px);
+            padding: 50px 40px;
+            position: relative;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-top: 20px;
+        }
+
+        /* Header */
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-title {
+            color: white;
+        }
+
+        .main-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn-header {
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-header:hover {
+            background: #34495e;
+            transform: translateY(-2px);
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #26b765 0%, #229954 100%);
+        }
+
+        /* Botón regresar */
+        .btn-regresar {
+            position: absolute;
+            top: 40px;
+            right: 50px;
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 28px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .btn-regresar:hover {
+            background: #34495e;
+            transform: translateY(-2px);
+        }
+
+        /* Estadísticas */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .stat-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* Panel de filtros */
+        .filter-panel {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .form-input {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #7B5FFF;
+            box-shadow: 0 0 0 3px rgba(123, 95, 255, 0.1);
+        }
+
+        .filter-btn {
+            background: #7B5FFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: fit-content;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-btn:hover {
+            background: #6B4FDF;
+            transform: translateY(-2px);
+        }
+
+        /* Tabla de estudiantes */
+        .students-table-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+        }
+
+        .table-header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .table-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .record-count {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+
+        .table-content {
+            overflow-x: auto;
+        }
+
+        .students-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .students-table th {
+            background: #f8f9fa;
+            padding: 15px 12px;
+            text-align: center;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .students-table td {
+            padding: 15px 12px;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .students-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .student-photo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .photo-placeholder {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #dee2e6;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+        }
+
+        .student-info {
+            text-align: left;
+        }
+
+        .student-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 2px;
+        }
+
+        .student-email {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .badge-info { background: #17a2b8; }
+        .badge-secondary { background: #6c757d; }
+        .badge-primary { background: #007bff; }
+        .badge-warning { background: #ffc107; color: #212529; }
+        .badge-success { background: #28a745; }
+        .badge-danger { background: #dc3545; }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .btn-action {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .btn-edit {
+            background: linear-gradient(45deg, #ffc107, #e0a800);
+            color: #212529;
+        }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255,193,7,0.4);
+            text-decoration: none;
+            color: #212529;
+        }
+
+        .btn-delete {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220,53,69,0.4);
+        }
+
+        .status-active {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .status-inactive {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        /* Estado vacío */
+        .no-students {
+            text-align: center;
+            padding: 80px 20px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .no-students i {
+            font-size: 5rem;
+            margin-bottom: 30px;
+            opacity: 0.6;
+        }
+
+        .no-students h3 {
+            color: white;
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .no-students p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .top-bar {
+                padding: 15px 20px;
+            }
+
+            .main-container {
+                padding: 30px 20px;
+            }
+
+            .header-section {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+
+            .main-title {
+                font-size: 2rem;
+                justify-content: center;
+            }
+
+            .header-buttons {
+                flex-direction: column;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .students-table {
+                font-size: 0.85rem;
+            }
+
+            .students-table th,
+            .students-table td {
+                padding: 10px 8px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 3px;
+            }
+
+            .btn-action {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+
+            .btn-regresar {
+                position: static;
+                margin-bottom: 30px;
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Barra Superior -->
+    <div class="top-bar">
+        <span style="cursor: pointer;" onclick="window.location.href='{% url 'attendance:home' %}'">Sistema de Asistencia Inteligente</span>
+        <div class="user-info">{{ user.username }}</div>
+    </div>
+
+    <div class="main-container">
+        <!-- Botón Regresar -->
+        <button class="btn-regresar" onclick="window.location.href='{% url 'attendance:management_dashboard' %}'">Regresar</button>
+        
+        <div class="container">
+            <!-- Header -->
+            <div class="header-section">
+                <div class="header-title">
+                    <h1 class="main-title">
+                        <i class="fas fa-users"></i>
+                        Lista de Estudiantes
+                    </h1>
+                    <p class="subtitle">Gestión de estudiantes matriculados</p>
+                </div>
+                <div class="header-buttons">
+                    <a href="{% url 'attendance:reports_dashboard' %}" class="btn-header btn-success">
+                        <i class="fas fa-chart-bar"></i>
+                        Ver Reportes
+                    </a>
+                    <a href="{% url 'attendance:student_register' %}" class="btn-header btn-primary">
+                        <i class="fas fa-user-plus"></i>
+                        Nuevo Estudiante
+                    </a>
+
+                </div>
+            </div>
+
+
+            <!-- Panel de Filtros -->
+            <div class="filter-panel">
+                <form method="get" class="filter-grid">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-search"></i>
+                            Buscar estudiante
+                        </label>
+                        <input type="text" name="search" class="form-input" 
+                               placeholder="Nombres, apellidos o email..."
+                               value="{{ request.GET.search }}">
+                    </div>
+
+
+                    <div class="form-group">
+                        <button type="submit" class="filter-btn">
+                            <i class="fas fa-search"></i>
+                            Buscar  
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tabla de Estudiantes -->
+            {% if students %}
+                <div class="students-table-container">
+                    <div class="table-header">
+                        <h3 class="table-title">
+                            <i class="fas fa-table"></i>
+                            Lista Completa de Estudiantes
+                        </h3>
+                        <span class="record-count">{{ students|length }} estudiantes</span>
+                    </div>
+                    <div class="table-content">
+                        <table class="students-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Foto</th>
+                                    <th>Estudiante</th>
+                                    <th>Curso</th>
+                                    <th>Aula</th>
+                                    <th>Cédula</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td><strong>{{ forloop.counter }}</strong></td>
+                                    <td>
+                                        {% if student.images.first %}
+                                        <img src="{{ student.images.first.image.url }}" 
+                                             alt="{{ student.nombres }} {{ student.apellidos }}"
+                                             class="student-photo">
+                                        {% else %}
+                                        <div class="photo-placeholder">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                    <td class="student-info">
+                                        <div class="student-name">{{ student.nombres }} {{ student.apellidos }}</div>
+                                        {% if student.email %}
+                                        <div class="student-email">{{ student.email }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-info">{{ student.curso|default:"No asignado" }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-secondary">{{ student.get_course_aula }}</span>
+                                    </td>
+                                    <td>
+                                        {% if student.cedula %}
+                                            <span class="badge badge-warning">{{ student.cedula }}</span>
+                                        {% else %}
+                                            <span style="color: #6c757d;">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if student.is_active %}
+                                            <span class="status-active">
+                                                <i class="fas fa-check-circle"></i> Activo
+                                            </span>
+                                        {% else %}
+                                            <span class="status-inactive">
+                                                <i class="fas fa-times-circle"></i> Inactivo
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a href="{% url 'attendance:student_edit' student.pk %}" class="btn-action btn-edit">
+                                                <i class="fas fa-edit"></i>
+                                                Editar
+                                            </a>
+                                            <button type="button" class="btn-action btn-delete"
+                                                    onclick="confirmDelete({{ student.pk }}, '{{ student.nombres }} {{ student.apellidos }}')">
+                                                <i class="fas fa-trash"></i>
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            {% else %}
+                <div class="no-students">
+                    <i class="fas fa-user-slash"></i>
+                    <h3>No hay estudiantes registrados</h3>
+                    <p>Comience matriculando su primer estudiante</p>
+                    <a href="{% url 'attendance:student_register' %}" class="btn-header btn-primary">
+                        <i class="fas fa-user-plus"></i>
+                        Matricular Primer Estudiante
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Modal de confirmación para eliminar -->
+    <div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 30px; border-radius: 15px; max-width: 500px; width: 90%;">
+            <h3 style="color: #2c3e50; margin-bottom: 20px;">
+                <i class="fas fa-exclamation-triangle" style="color: #f39c12;"></i>
+                Confirmar eliminación
+            </h3>
+            <p style="margin-bottom: 20px;">¿Está seguro de que desea eliminar al estudiante <strong id="studentName"></strong>?</p>
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #856404;">
+                <i class="fas fa-info-circle" style="margin-right: 8px;"></i>
+                Esta acción también eliminará todos los registros de asistencia y participación asociados.
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button onclick="closeModal()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                    Cancelar
+                </button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                        <i class="fas fa-trash" style="margin-right: 5px;"></i>
+                        Eliminar Estudiante
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- FontAwesome y SweetAlert -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+    function confirmDelete(studentId, studentName) {
+        document.getElementById('studentName').textContent = studentName;
+        document.getElementById('deleteForm').action = `/students/${studentId}/delete/`;
+        
+        const modal = document.getElementById('deleteModal');
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('deleteModal');
+        modal.style.display = 'none';
+    }
+
+    // Cerrar modal al hacer clic fuera
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+
+    // Auto-submit del formulario de filtros al cambiar selects
+    document.querySelectorAll('select[name="curso"], select[name="aula"]').forEach(select => {
+        select.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+
+    // Animación de entrada para la tabla
+    document.addEventListener('DOMContentLoaded', function() {
+        const table = document.querySelector('.students-table-container');
+        if (table) {
+            table.style.opacity = '0';
+            table.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                table.style.transition = 'all 0.5s ease';
+                table.style.opacity = '1';
+                table.style.transform = 'translateY(0)';
+            }, 100);
+        }
+    });
+
+    // Efecto de búsqueda en tiempo real
+    const searchInput = document.querySelector('input[name="search"]');
+    if (searchInput) {
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (this.value.length >= 3 || this.value.length === 0) {
+                    this.form.submit();
+                }
+            }, 500);
+        });
+    }
+    </script>
+</body>
+</html>

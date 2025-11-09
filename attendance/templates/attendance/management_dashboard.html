@@ -1,0 +1,330 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios - Sistema de Asistencia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        /* Barra superior oscura */
+        .top-bar {
+            background: #2c3e50;
+            color: white;
+            padding: 18px 40px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Contenedor principal con degradado */
+        .main-container {
+            background: linear-gradient(135deg, #7B5FFF 0%, #9D7EFF 50%, #B68FFF 100%);
+            min-height: calc(100vh - 60px);
+            padding: 50px 40px;
+            position: relative;
+        }
+
+        /* Botón regresar */
+        .btn-regresar {
+            position: absolute;
+            top: 40px;
+            right: 50px;
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 28px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .btn-regresar:hover {
+            background: #34495e;
+            transform: translateY(-2px);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding-top: 20px;
+        }
+
+        /* Header */
+        .header-section {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .header-title {
+            color: white;
+        }
+
+        .main-title {
+            font-size: 2.3rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Tarjetas de opciones */
+        .option-card {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            padding: 35px 40px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .option-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        /* Iconos */
+        .option-icon {
+            width: 90px;
+            height: 90px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-right: 30px;
+        }
+
+        .option-icon svg {
+            width: 55px;
+            height: 55px;
+        }
+
+        .custom-icon {
+            width: 55px;
+            height: 55px;
+            object-fit: contain;
+            transition: all 0.3s ease;
+        }
+
+        .option-card:hover .custom-icon {
+            transform: scale(1.1);
+        }
+
+        /* Contenido */
+        .option-content {
+            flex: 1;
+        }
+
+        .option-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .option-description {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        /* Botones de acción */
+        .action-btn {
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 26px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .action-btn:hover {
+            background: #34495e;
+            transform: translateY(-2px);
+        }
+
+        /* Botones de administración */
+        .admin-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .admin-btn {
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 22px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .admin-btn:hover {
+            background: #34495e;
+            transform: translateY(-2px);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .top-bar {
+                padding: 15px 20px;
+            }
+
+            .main-container {
+                padding: 30px 20px;
+            }
+
+            .btn-regresar {
+                position: static;
+                margin-bottom: 30px;
+                width: 100%;
+                text-align: center;
+            }
+
+            .management-title {
+                font-size: 1.8rem;
+                text-align: center;
+            }
+
+            .option-card {
+                flex-direction: column;
+                text-align: center;
+                padding: 30px 25px;
+            }
+
+            .option-icon {
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+
+            .option-content {
+                margin-bottom: 20px;
+            }
+
+            .action-btn {
+                width: 100%;
+            }
+
+            .admin-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .admin-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra Superior -->
+    <div class="top-bar">
+        <span style="cursor: pointer;" onclick="window.location.href='{% url 'attendance:home' %}'">Sistema de Asistencia Inteligente</span>
+        <div class="user-info">{{ user.username }}</div>
+    </div>
+
+    <div class="main-container">
+        <!-- Botón Regresar -->
+        <button class="btn-regresar" onclick="window.location.href='{% url 'attendance:home' %}'">Regresar</button>
+        
+        <div class="container">
+            <!-- Título Principal -->
+            <div class="header-section">
+                <div class="header-title">
+                    <h1 class="main-title">
+                        <i class="fas fa-users-cog"></i>
+                        Gestión de Usuarios
+                    </h1>
+                    <p class="subtitle">Administración integral de estudiantes y cursos académicos</p>
+                </div>
+            </div>
+            
+            <!-- Ver Estudiantes -->
+            <div class="option-card" onclick="window.location.href='{% url 'attendance:student_list' %}'">
+                <div class="option-icon">
+                    <img src="https://static.vecteezy.com/system/resources/previews/050/915/378/non_2x/two-people-sitting-at-a-table-with-books-free-vector.jpg" alt="Estudiantes" class="custom-icon">
+                </div>
+                <div class="option-content">
+                    <h2 class="option-title">Ver estudiantes</h2>
+                    <p class="option-description">Visualización de perfiles de estudiantes matriculados en el respectivo curso.</p>
+                </div>
+                <button class="action-btn">Ir a Estudiantes</button>
+            </div>
+
+            <!-- Ver Curso -->
+            <div class="option-card" onclick="window.location.href='{% url 'attendance:course_list' %}'">
+                <div class="option-icon">
+                    <img src="https://i.ibb.co/hFbhHncm/Whats-App-Image-2025-11-09-at-12-28-22-PM.jpg" alt="Cursos" class="custom-icon">
+                </div>
+                <div class="option-content">
+                    <h2 class="option-title">Ver curso</h2>
+                    <p class="option-description">Visualización de cursos registrados para la asignación en los perfiles estudiantiles.</p>
+                </div>
+                <button class="action-btn">Ir a Cursos</button>
+            </div>
+
+            <!-- Administración -->
+            <div class="option-card">
+                <div class="option-icon">
+                    <img src="https://i.ibb.co/RpBG1pRk/0457d2be-5b15-4fae-833a-670a1d723868.jpg" alt="Administración" class="custom-icon">
+                </div>
+                <div class="option-content">
+                    <h2 class="option-title">Administración</h2>
+                    <p class="option-description">Gestión de formulario para el control del sistema.</p>
+                    <div class="admin-buttons">
+                        <button class="admin-btn" onclick="window.location.href='{% url 'attendance:course_create' %}'">Registro Curso</button>
+                        <button class="admin-btn" onclick="window.location.href='{% url 'attendance:student_register' %}'">Matriculación Estudiante</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</body>
+</html>

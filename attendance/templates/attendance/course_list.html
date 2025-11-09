@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Cursos - Sistema de Asistencia</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        /* Barra superior oscura */
+        .top-bar {
+            background: #2c3e50;
+            color: white;
+            padding: 18px 40px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Contenedor principal con degradado */
+        .main-container {
+            background: linear-gradient(135deg, #7B5FFF 0%, #9D7EFF 50%, #B68FFF 100%);
+            min-height: calc(100vh - 60px);
+            padding: 50px 40px;
+            position: relative;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-top: 20px;
+        }
+
+        /* Header */
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-title {
+            color: white;
+        }
+
+        .main-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn-header {
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-header:hover {
+            background: #34495e;
+            transform: translateY(-2px);
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #26b765 0%, #229954 100%);
+        }
+
+        /* Botón regresar */
+        .btn-regresar {
+            position: absolute;
+            top: 40px;
+            right: 50px;
+            background: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 28px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .btn-regresar:hover {
+            background: #34495e;
+            transform: translateY(-2px);
+        }
+
+        /* Estadísticas */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .stat-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* Panel de filtros */
+        .filter-panel {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .form-input {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #7B5FFF;
+            box-shadow: 0 0 0 3px rgba(123, 95, 255, 0.1);
+        }
+
+        .filter-btn {
+            background: #7B5FFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: fit-content;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-btn:hover {
+            background: #6B4FDF;
+            transform: translateY(-2px);
+        }
+
+        /* Tabla de cursos */
+        .courses-table-container {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+        }
+
+        .table-header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .table-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .record-count {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+        }
+
+        .table-content {
+            overflow-x: auto;
+        }
+
+        .courses-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .courses-table th {
+            background: #f8f9fa;
+            padding: 15px 12px;
+            text-align: center;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .courses-table td {
+            padding: 15px 12px;
+            text-align: center;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .courses-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .course-info {
+            text-align: left;
+        }
+
+        .course-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 2px;
+        }
+
+        .course-code {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .badge-info { background: #17a2b8; }
+        .badge-secondary { background: #6c757d; }
+        .badge-primary { background: #007bff; }
+        .badge-warning { background: #ffc107; color: #212529; }
+        .badge-success { background: #28a745; }
+        .badge-danger { background: #dc3545; }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .btn-action {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .btn-edit {
+            background: linear-gradient(45deg, #ffc107, #e0a800);
+            color: #212529;
+        }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255,193,7,0.4);
+            text-decoration: none;
+            color: #212529;
+        }
+
+        .btn-delete {
+            background: linear-gradient(45deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220,53,69,0.4);
+        }
+
+        /* Estado vacío */
+        .no-courses {
+            text-align: center;
+            padding: 80px 20px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .no-courses i {
+            font-size: 5rem;
+            margin-bottom: 30px;
+            opacity: 0.6;
+        }
+
+        .no-courses h3 {
+            color: white;
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .no-courses p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .top-bar {
+                padding: 15px 20px;
+            }
+
+            .main-container {
+                padding: 30px 20px;
+            }
+
+            .header-section {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+
+            .main-title {
+                font-size: 2rem;
+                justify-content: center;
+            }
+
+            .header-buttons {
+                flex-direction: column;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .courses-table {
+                font-size: 0.85rem;
+            }
+
+            .courses-table th,
+            .courses-table td {
+                padding: 10px 8px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 3px;
+            }
+
+            .btn-action {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+
+            .btn-regresar {
+                position: static;
+                margin-bottom: 30px;
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Barra superior -->
+    <div class="top-bar">
+        <div style="cursor: pointer;" onclick="window.location.href='{% url 'attendance:home' %}'">Sistema de Asistencia Inteligente</div>
+        <div class="user-info">{{ user.username }}</div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="main-container">
+        <!-- Botón Regresar -->
+        <button class="btn-regresar" onclick="window.location.href='{% url 'attendance:management_dashboard' %}'">Regresar</button>
+        
+        <div class="container">
+            <!-- Header -->
+            <div class="header-section">
+                <div class="header-title">
+                    <h1 class="main-title">
+                        <i class="fas fa-graduation-cap"></i>
+                        Gestión de Cursos
+                    </h1>
+                    <p class="subtitle">Administración de cursos académicos</p>
+                </div>
+                <div class="header-buttons">
+                    <a href="{% url 'attendance:student_list' %}" class="btn-header btn-success">
+                        <i class="fas fa-users"></i>
+                        Ver Estudiantes
+                    </a>
+
+                    <a href="{% url 'attendance:course_create' %}" class="btn-header btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Nuevo Curso
+                    </a>
+
+                </div>
+            </div>
+
+
+            <!-- Panel de filtros -->
+            <div class="filter-panel">
+                <form method="get">
+                    <div class="filter-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-search"></i>
+                                Buscar curso
+                            </label>
+                            <input type="text" 
+                                   name="search" 
+                                   class="form-input" 
+                                   placeholder="Nombre, código o profesor..."
+                                   value="{{ search }}">
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="filter-btn">
+                                <i class="fas fa-search"></i>
+                                Buscar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tabla de cursos -->
+            {% if courses %}
+            <div class="courses-table-container">
+                <div class="table-header">
+                    <div class="table-title">
+                        <i class="fas fa-table"></i>
+                        Lista de Cursos
+                    </div>
+                    <div class="record-count">
+                        {{ courses|length }} curso{{ courses|length|pluralize }}
+                    </div>
+                </div>
+                <div class="table-content">
+                    <table class="courses-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Curso</th>
+                                <th>Profesor</th>
+                                <th>Aula</th>
+                                <th>Horario</th>
+                                <th>Sesión</th>
+                                <th>Estudiantes</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course in courses %}
+                            <tr>
+                                <td>
+                                    <strong>{{ forloop.counter }}</strong>
+                                </td>
+                                <td class="course-info">
+                                    <div class="course-name">{{ course.nombre }}</div>
+                                    <div class="course-code">
+                                        <i class="fas fa-hashtag"></i> {{ course.codigo }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                        <i class="fas fa-user-tie" style="color: #667eea;"></i>
+                                        {{ course.profesor }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                        <i class="fas fa-door-open" style="color: #28a745;"></i>
+                                        {{ course.aula }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                                        <i class="fas fa-clock" style="color: #17a2b8;"></i>
+                                        {{ course.horario }}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if course.sesion %}
+                                        <span class="badge badge-info">{{ course.sesion }}</span>
+                                    {% else %}
+                                        <span class="badge badge-secondary">Sin sesión</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-primary">
+                                        <i class="fas fa-users"></i> {{ course.student_count }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if course.student_count > 0 %}
+                                        <span class="badge badge-success">Activo</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">Vacío</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <a href="{% url 'attendance:course_edit' course.pk %}" 
+                                           class="btn-action btn-edit" 
+                                           title="Editar Curso">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" 
+                                                class="btn-action btn-delete" 
+                                                title="Eliminar Curso"
+                                                data-course-id="{{ course.pk }}"
+                                                data-course-name="{{ course.nombre }}"
+                                                data-student-count="{{ course.student_count }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Paginación -->
+            {% if is_paginated %}
+                <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px;">
+                    {% if page_obj.has_previous %}
+                        <a href="?{% if search %}search={{ search }}&{% endif %}page=1" 
+                           class="btn-header" style="padding: 8px 12px; font-size: 0.9rem;">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                        <a href="?{% if search %}search={{ search }}&{% endif %}page={{ page_obj.previous_page_number }}" 
+                           class="btn-header" style="padding: 8px 12px; font-size: 0.9rem;">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    {% endif %}
+
+                    <span style="color: white; font-weight: 600; padding: 8px 16px; background: rgba(255,255,255,0.2); border-radius: 8px;">
+                        {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?{% if search %}search={{ search }}&{% endif %}page={{ page_obj.next_page_number }}" 
+                           class="btn-header" style="padding: 8px 12px; font-size: 0.9rem;">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                        <a href="?{% if search %}search={{ search }}&{% endif %}page={{ page_obj.paginator.num_pages }}" 
+                           class="btn-header" style="padding: 8px 12px; font-size: 0.9rem;">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            {% else %}
+            <!-- Estado vacío -->
+            <div class="no-courses">
+                <i class="fas fa-graduation-cap"></i>
+                <h3>No hay cursos registrados</h3>
+                <p>Comience creando su primer curso académico</p>
+                <a href="{% url 'attendance:course_create' %}" class="btn-header btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Crear Primer Curso
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Modal de confirmación para eliminar -->
+    <div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 15px; padding: 30px; max-width: 500px; width: 90%; text-align: center;">
+            <div style="color: #dc3545; font-size: 3rem; margin-bottom: 20px;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 style="color: #2c3e50; margin-bottom: 15px;">Confirmar eliminación</h3>
+            <p style="color: #666; margin-bottom: 20px;">
+                ¿Está seguro de que desea eliminar el curso <strong id="courseName"></strong>?
+            </p>
+            <div id="studentWarning" style="display: none; background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
+                <i class="fas fa-info-circle"></i>
+                Este curso tiene <strong id="studentCount"></strong> estudiantes asociados y no se puede eliminar.
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button type="button" onclick="closeModal()" style="background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                    Cancelar
+                </button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" id="confirmDeleteBtn" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">
+                        <i class="fas fa-trash"></i> Eliminar Curso
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <script>
+        // Configurar listeners para botones de eliminar
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.btn-delete').forEach(button => {
+                button.addEventListener('click', function() {
+                    const courseId = this.getAttribute('data-course-id');
+                    const courseName = this.getAttribute('data-course-name');
+                    const studentCount = parseInt(this.getAttribute('data-student-count'));
+                    
+                    confirmDelete(courseId, courseName, studentCount);
+                });
+            });
+        });
+
+        function confirmDelete(courseId, courseName, studentCount) {
+            document.getElementById('courseName').textContent = courseName;
+            document.getElementById('deleteForm').action = `/courses/${courseId}/delete/`;
+            
+            const studentWarning = document.getElementById('studentWarning');
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            
+            if (studentCount > 0) {
+                document.getElementById('studentCount').textContent = studentCount;
+                studentWarning.style.display = 'block';
+                confirmBtn.disabled = true;
+                confirmBtn.style.background = '#6c757d';
+                confirmBtn.innerHTML = '<i class="fas fa-ban"></i> No se puede eliminar';
+            } else {
+                studentWarning.style.display = 'none';
+                confirmBtn.disabled = false;
+                confirmBtn.style.background = '#dc3545';
+                confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Eliminar Curso';
+            }
+            
+            const modal = document.getElementById('deleteModal');
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+
+        // Cerrar modal al hacer clic fuera
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
