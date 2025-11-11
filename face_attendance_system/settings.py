@@ -74,12 +74,36 @@ WSGI_APPLICATION = 'face_attendance_system.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+import os
+
+# Configuración para seleccionar entre SQLite y MySQL
+USE_MYSQL = os.getenv('USE_MYSQL', 'False').lower() == 'true'
+
+if USE_MYSQL:
+    # Configuración MySQL para AWS RDS
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('MYSQL_DATABASE', 'nandu'),
+            'USER': os.getenv('MYSQL_USER', 'admin'),
+            'PASSWORD': os.getenv('MYSQL_PASSWORD', 'admin123'),
+            'HOST': os.getenv('MYSQL_HOST', 'nandu.czmoey4oapii.sa-east-1.rds.amazonaws.com'),
+            'PORT': os.getenv('MYSQL_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'use_unicode': True,
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        }
     }
-}
+else:
+    # Configuración SQLite (por defecto)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation

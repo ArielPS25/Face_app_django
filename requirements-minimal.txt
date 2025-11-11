@@ -1,0 +1,55 @@
+# ===============================================
+# REQUIREMENTS ALTERNATIVOS - DJANGO FACE RECOGNITION
+# Para casos con problemas de compilación
+# ===============================================
+
+# OPCIÓN 1: Sin compilación (usar wheels precompilados)
+# Usar solo si hay problemas con dlib
+
+# Core Django
+Django==5.2.8
+django-widget-tweaks==1.5.0
+
+# Base de datos
+mysql-connector-python==9.5.0   # No requiere compilación
+# mysqlclient==2.2.7            # Comentado - requiere compilación
+
+# Computer Vision (versiones estables)
+opencv-python==4.10.0.84        # Versión más estable
+# dlib==19.24.0                 # Comentado - usar instalación manual
+face-recognition==1.3.0          # Podría fallar sin dlib
+
+# Machine Learning
+mediapipe==0.10.14               # Versión más estable
+numpy==1.24.3                    # Versión compatible
+pandas==2.0.3                    # Versión estable
+
+# Procesamiento de imágenes
+Pillow==10.4.0                   # Versión LTS
+
+# Utilidades básicas
+python-dateutil==2.8.2
+pytz==2023.3
+colorama==0.4.6
+
+# ===============================================
+# INSTALACIÓN MANUAL DE DLIB (si falla):
+# ===============================================
+# 
+# WINDOWS:
+# 1. pip install cmake
+# 2. Descargar dlib wheel desde:
+#    https://pypi.org/project/dlib/#files
+# 3. pip install dlib-19.24.0-cp311-cp311-win_amd64.whl
+#
+# LINUX:
+# 1. sudo apt-get install build-essential cmake
+# 2. pip install dlib==19.24.0
+#
+# MACOS:
+# 1. brew install cmake
+# 2. pip install dlib==19.24.0
+#
+# ALTERNATIVA SIN DLIB:
+# Usar solo opencv para detección de caras básica
+# ===============================================
