@@ -388,6 +388,49 @@
             font-size: 0.85rem;
             margin-top: 5px;
         }
+
+        /* Estilos específicos para la cámara */
+        #camera-container {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        #camera-video {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .camera-message {
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Estilos responsivos para cámara */
+        @media (max-width: 768px) {
+            #camera-container {
+                padding: 10px;
+            }
+            
+            .photo-section .file-button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -410,11 +453,11 @@
                 <p class="subtitle">Complete el formulario para registrar un nuevo estudiante</p>
             </div>
 
-
             <!-- Formulario -->
             <div class="form-container">
-                <form method="post" enctype="multipart/form-data" id="matricula-form">
+                <form method="post" enctype="multipart/form-data" id="student-form">
                     {% csrf_token %}
+                    
                     <!-- Sección: Foto del Estudiante -->
                     <div class="form-section">
                         <h5 class="section-title">
@@ -422,27 +465,73 @@
                             Fotografía del Estudiante
                         </h5>
                         <div class="photo-section">
-                            <div class="preview-container" id="foto-preview" onclick="document.getElementById('foto-input').click()">
+                            <div class="preview-container" id="foto-preview">
                                 <div class="preview-placeholder">
                                     <i class="fas fa-camera" style="font-size: 2.5rem; margin-bottom: 10px; color: #7B5FFF;"></i>
-                                    <div style="font-weight: 600;">Subir foto</div>
-                                    <small>Haga clic para seleccionar</small>
+                                    <div style="font-weight: 600;">Foto del estudiante</div>
+                                    <small>Use los botones para capturar</small>
                                 </div>
                             </div>
                             <div class="photo-info">
                                 <div class="form-group">
-                                    <label for="foto-input" class="form-label">
-                                        <i class="fas fa-upload"></i>
-                                        Seleccionar archivo
+                                    <label class="form-label">
+                                        <i class="fas fa-image"></i>
+                                        Opciones de fotografía
                                     </label>
-                                    <button type="button" class="file-button" onclick="document.getElementById('foto-input').click()">
-                                        <i class="fas fa-folder-open"></i>
-                                        Examinar archivos
-                                    </button>
-                                    <input type="file" id="foto-input" name="foto" class="file-input" accept="image/*">
+                                    
+                                    <!-- Botones de captura -->
+                                    <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+                                        <button type="button" class="btn btn-primary" onclick="document.getElementById('id_foto').click()">
+                                            <i class="fas fa-folder-open me-2"></i>
+                                            Subir Archivo
+                                        </button>
+                                        <button type="button" class="btn btn-primary" onclick="toggleCamera()">
+                                            <i class="fas fa-camera me-2"></i>
+                                            Usar Cámara
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Selector de dispositivos de cámara -->
+                                    <div id="camera-selector" style="display: none; margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+                                        <label class="form-label" style="margin-bottom: 8px; font-weight: 600; color: #495057;">
+                                            <i class="fas fa-video me-2"></i>
+                                            Seleccionar Cámara:
+                                        </label>
+                                        <select id="camera-select" class="form-select" style="margin-bottom: 10px;">
+                                            <option value="">Detectando cámaras...</option>
+                                        </select>
+                                        <div style="display: flex; gap: 10px;">
+                                            <button type="button" class="btn btn-sm btn-success" onclick="switchCamera()">
+                                                <i class="fas fa-sync-alt me-1"></i>
+                                                Cambiar Cámara
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-info" onclick="refreshCameraList()">
+                                                <i class="fas fa-refresh me-1"></i>
+                                                Actualizar Lista
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Input de archivo (oculto) -->
+                                    <input type="file" id="id_foto" name="foto" class="file-input" accept="image/*">
+                                    
+                                    <!-- Cámara (oculta inicialmente) -->
+                                    <div id="camera-container" style="display: none; margin-top: 15px;">
+                                        <div id="camera-message" class="alert" style="display: none; margin-bottom: 10px;"></div>
+                                        <video id="camera-video" autoplay playsinline 
+                                               style="width: 100%; max-width: 400px; border-radius: 8px; border: 2px solid #7B5FFF;"></video>
+                                        <div style="margin-top: 10px;">
+                                            <button type="button" class="btn btn-success" onclick="capturePhoto()">
+                                                <i class="fas fa-camera-retro me-2"></i>
+                                                Capturar Foto
+                                            </button>
+                                        </div>
+                                        <canvas id="capture-canvas" style="display: none;"></canvas>
+                                    </div>
+                                    
                                     <div class="file-info">
                                         <i class="fas fa-info-circle"></i>
-                                        Formatos: JPG, PNG, GIF • Máximo: 5MB
+                                        Formatos: JPG, PNG, GIF • Máximo: 5MB • Cámara en vivo disponible
                                     </div>
                                     {% if form.foto.errors %}
                                         <div class="error-message">
@@ -505,7 +594,6 @@
                                 {% endif %}
                             </div>
                         </div>
-
                     </div>
 
                     <!-- Sección: Información Académica -->
@@ -540,7 +628,6 @@
                                     </div>
                                 {% endif %}
                             </div>
-
                         </div>
                     </div>
 
@@ -593,17 +680,14 @@
                                     </div>
                                 {% endif %}
                             </div>
-
                         </div>
-                        
-
                     </div>
 
                     <!-- Botones de acción -->
                     <div class="action-buttons">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save"></i>
-                            Guardar cambios
+                            Registrar Estudiante
                         </button>
                         <a href="{% url 'attendance:management_dashboard' %}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i>
@@ -619,74 +703,437 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Preview de imagen
-            const fotoInput = document.getElementById('foto-input');
+        // Variables globales para la cámara
+        let stream = null;
+        let cameraActive = false;
+        let availableCameras = [];
+        let currentCameraId = null;
+
+        // Funciones para manejo de preview de foto
+        function showPhotoPreview(imageSrc, title) {
             const fotoPreview = document.getElementById('foto-preview');
+            fotoPreview.innerHTML = `
+                <img src="${imageSrc}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;" />
+                <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(0,0,0,0.7); color: white; 
+                            padding: 5px; border-radius: 5px; font-size: 0.8rem; text-align: center;">
+                    ${title}
+                </div>
+            `;
+            fotoPreview.style.borderColor = '#28a745';
+            fotoPreview.style.borderStyle = 'solid';
+        }
 
-            fotoInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                
-                if (file) {
-                    // Verificar que es una imagen
-                    if (!file.type.startsWith('image/')) {
-                        alert('Por favor seleccione un archivo de imagen válido');
-                        fotoInput.value = '';
-                        return;
-                    }
-                    
-                    // Verificar tamaño (5MB)
-                    if (file.size > 5 * 1024 * 1024) {
-                        alert('El archivo debe ser menor a 5MB');
-                        fotoInput.value = '';
-                        return;
-                    }
-                    
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        fotoPreview.innerHTML = `<img src="${e.target.result}" alt="Preview" />`;
-                        fotoPreview.style.borderColor = '#7B5FFF';
-                        fotoPreview.style.borderStyle = 'solid';
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    fotoPreview.innerHTML = `
-                        <div class="preview-placeholder">
-                            <i class="fas fa-camera" style="font-size: 2.5rem; margin-bottom: 10px; color: #7B5FFF;"></i>
-                            <div style="font-weight: 600;">Subir foto</div>
-                            <small>Haga clic para seleccionar</small>
-                        </div>
-                    `;
-                    fotoPreview.style.borderColor = '#7B5FFF';
-                    fotoPreview.style.borderStyle = 'dashed';
-                }
-            });
+        function resetPhotoPreview() {
+            const fotoPreview = document.getElementById('foto-preview');
+            fotoPreview.innerHTML = `
+                <div class="preview-placeholder">
+                    <i class="fas fa-camera" style="font-size: 2.5rem; margin-bottom: 10px; color: #7B5FFF;"></i>
+                    <div style="font-weight: 600;">Foto del estudiante</div>
+                    <small>Use los botones para capturar</small>
+                </div>
+            `;
+            fotoPreview.style.borderColor = '#7B5FFF';
+            fotoPreview.style.borderStyle = 'dashed';
+        }
 
-
-
-            // Formateo automático de nombres
-            const nombresInput = document.getElementById('id_nombres');
-            const apellidosInput = document.getElementById('id_apellidos');
+        // Funciones de la cámara
+        async function toggleCamera() {
+            console.log('toggleCamera llamada, cameraActive:', cameraActive);
             
-            [nombresInput, apellidosInput].forEach(input => {
-                if (input) {
-                    input.addEventListener('blur', function() {
-                        const value = this.value;
-                        if (value) {
-                            this.value = value.toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
-                        }
-                    });
-                }
-            });
+            if (cameraActive) {
+                await stopCamera();
+            } else {
+                await startCamera();
+            }
+        }
 
-            // Validación del formulario antes del envío
-            const form = document.getElementById('matricula-form');
+        async function startCamera(deviceId = null) {
+            console.log('Iniciando cámara...', deviceId ? 'con dispositivo específico: ' + deviceId : 'con dispositivo por defecto');
+            
+            try {
+                const video = document.getElementById('camera-video');
+                const cameraContainer = document.getElementById('camera-container');
+                const cameraSelector = document.getElementById('camera-selector');
+                
+                if (!video || !cameraContainer) {
+                    console.error('Elementos de cámara no encontrados');
+                    return;
+                }
+
+                // Mostrar mensaje de carga
+                showCameraMessage('Detectando cámaras disponibles...', 'info');
+
+                // Detectar cámaras disponibles primero
+                await detectAvailableCameras();
+
+                // Determinar qué cámara usar
+                let constraints = { 
+                    video: { 
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    } 
+                };
+
+                if (deviceId) {
+                    constraints.video.deviceId = { exact: deviceId };
+                    currentCameraId = deviceId;
+                } else if (availableCameras.length > 0) {
+                    // Si no se especifica dispositivo, usar el primero disponible que no sea la Canon
+                    const workingCamera = availableCameras.find(cam => 
+                        !cam.label.toLowerCase().includes('canon') && 
+                        !cam.label.toLowerCase().includes('dslr')
+                    ) || availableCameras[0];
+                    
+                    if (workingCamera) {
+                        constraints.video.deviceId = { exact: workingCamera.deviceId };
+                        currentCameraId = workingCamera.deviceId;
+                    }
+                } else {
+                    // Fallback a dispositivo por defecto
+                    constraints.video.facingMode = 'user';
+                }
+
+                showCameraMessage('Activando cámara seleccionada...', 'info');
+
+                // Solicitar acceso a la cámara
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+                video.srcObject = stream;
+                await video.play();
+
+                // Mostrar el contenedor de la cámara y selector
+                cameraContainer.style.display = 'block';
+                if (availableCameras.length > 1) {
+                    cameraSelector.style.display = 'block';
+                    updateCameraSelector();
+                }
+                cameraActive = true;
+
+                // Actualizar currentCameraId si no se especificó
+                if (!currentCameraId && stream) {
+                    const track = stream.getVideoTracks()[0];
+                    if (track && track.getSettings) {
+                        const settings = track.getSettings();
+                        currentCameraId = settings.deviceId;
+                    }
+                }
+
+                const cameraName = getCurrentCameraName();
+                showCameraMessage(`Cámara activa: ${cameraName}. Haga clic en "Capturar Foto" cuando esté listo.`, 'success');
+                console.log('Cámara iniciada exitosamente con dispositivo:', currentCameraId);
+
+            } catch (error) {
+                console.error('Error al acceder a la cámara:', error);
+                let message = 'Error al acceder a la cámara. ';
+                
+                if (error.name === 'NotAllowedError') {
+                    message += 'Por favor, permita el acceso a la cámara en su navegador.';
+                } else if (error.name === 'NotFoundError') {
+                    message += 'No se encontró la cámara seleccionada. ';
+                    if (availableCameras.length > 1) {
+                        message += 'Intente seleccionar otra cámara de la lista.';
+                        // Mostrar selector para que usuario pueda elegir otra cámara
+                        const cameraSelector = document.getElementById('camera-selector');
+                        if (cameraSelector) {
+                            cameraSelector.style.display = 'block';
+                            updateCameraSelector();
+                        }
+                    } else {
+                        message += 'Verifique que tenga una cámara conectada.';
+                    }
+                } else if (error.name === 'NotReadableError') {
+                    message += 'La cámara está siendo usada por otra aplicación. Cierre otras aplicaciones que usen la cámara.';
+                } else {
+                    message += 'Revise que su cámara esté conectada y funcionando.';
+                }
+                
+                showCameraMessage(message, 'error');
+            }
+        }
+
+        // Detectar cámaras disponibles
+        async function detectAvailableCameras() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                availableCameras = devices.filter(device => device.kind === 'videoinput');
+                
+                console.log('Cámaras detectadas:', availableCameras);
+                
+                // Si no hay cámaras con etiquetas, solicitar permisos primero
+                if (availableCameras.length > 0 && !availableCameras[0].label) {
+                    try {
+                        const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                        tempStream.getTracks().forEach(track => track.stop());
+                        
+                        // Volver a detectar con permisos
+                        const devicesWithLabels = await navigator.mediaDevices.enumerateDevices();
+                        availableCameras = devicesWithLabels.filter(device => device.kind === 'videoinput');
+                    } catch (e) {
+                        console.warn('No se pudieron obtener etiquetas de dispositivos:', e);
+                    }
+                }
+                
+                return availableCameras;
+            } catch (error) {
+                console.error('Error detectando cámaras:', error);
+                availableCameras = [];
+                return [];
+            }
+        }
+
+        // Actualizar el selector de cámaras
+        function updateCameraSelector() {
+            const select = document.getElementById('camera-select');
+            if (!select) return;
+            
+            // Limpiar opciones existentes
+            select.innerHTML = '';
+            
+            if (availableCameras.length === 0) {
+                select.innerHTML = '<option value="">No se detectaron cámaras</option>';
+                return;
+            }
+            
+            // Agregar opciones de cámaras
+            availableCameras.forEach((camera, index) => {
+                const option = document.createElement('option');
+                option.value = camera.deviceId;
+                
+                // Crear nombre descriptivo
+                let name = camera.label || `Cámara ${index + 1}`;
+                if (name.length > 50) {
+                    name = name.substring(0, 47) + '...';
+                }
+                
+                // Marcar problemas conocidos
+                if (name.toLowerCase().includes('canon') || name.toLowerCase().includes('dslr')) {
+                    name += ' ⚠️ (Puede tener problemas)';
+                }
+                
+                option.textContent = name;
+                option.selected = camera.deviceId === currentCameraId;
+                select.appendChild(option);
+            });
+        }
+
+        // Obtener nombre de cámara actual
+        function getCurrentCameraName() {
+            if (!currentCameraId) return 'Cámara por defecto';
+            
+            const camera = availableCameras.find(cam => cam.deviceId === currentCameraId);
+            if (camera) {
+                let name = camera.label || 'Cámara desconocida';
+                if (name.length > 30) {
+                    name = name.substring(0, 27) + '...';
+                }
+                return name;
+            }
+            return 'Cámara seleccionada';
+        }
+
+        // Cambiar a otra cámara
+        async function switchCamera() {
+            const select = document.getElementById('camera-select');
+            if (!select || !select.value) {
+                showCameraMessage('Seleccione una cámara de la lista', 'error');
+                return;
+            }
+            
+            const newDeviceId = select.value;
+            if (newDeviceId === currentCameraId) {
+                showCameraMessage('Ya está usando esa cámara', 'info');
+                return;
+            }
+            
+            console.log('Cambiando a cámara:', newDeviceId);
+            
+            // Detener cámara actual
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            // Iniciar con nueva cámara
+            await startCamera(newDeviceId);
+        }
+
+        // Actualizar lista de cámaras
+        async function refreshCameraList() {
+            showCameraMessage('Actualizando lista de cámaras...', 'info');
+            
+            await detectAvailableCameras();
+            updateCameraSelector();
+            
+            if (availableCameras.length > 0) {
+                showCameraMessage(`Se encontraron ${availableCameras.length} cámara(s)`, 'success');
+            } else {
+                showCameraMessage('No se encontraron cámaras. Verifique las conexiones.', 'error');
+            }
+        }
+
+        async function stopCamera() {
+            console.log('Deteniendo cámara...');
+            
+            if (stream) {
+                const tracks = stream.getTracks();
+                tracks.forEach(track => track.stop());
+                stream = null;
+            }
+
+            const video = document.getElementById('camera-video');
+            const cameraContainer = document.getElementById('camera-container');
+            const cameraSelector = document.getElementById('camera-selector');
+
+            if (video) {
+                video.srcObject = null;
+            }
+
+            if (cameraContainer) {
+                cameraContainer.style.display = 'none';
+            }
+
+            if (cameraSelector) {
+                cameraSelector.style.display = 'none';
+            }
+
+            cameraActive = false;
+            currentCameraId = null;
+            console.log('Cámara detenida exitosamente');
+        }
+
+        async function capturePhoto() {
+            console.log('capturePhoto llamada');
+            
+            const video = document.getElementById('camera-video');
+            const canvas = document.getElementById('capture-canvas');
+            
+            if (!video || !canvas) {
+                console.error('Elementos necesarios no encontrados');
+                showCameraMessage('Error: elementos de captura no encontrados', 'error');
+                return;
+            }
+
+            if (!cameraActive || !stream) {
+                console.warn('Cámara no está activa');
+                showCameraMessage('Por favor, active la cámara primero', 'error');
+                return;
+            }
+
+            try {
+                // Configurar el canvas con el tamaño del video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0);
+
+                // Convertir a blob y luego a base64
+                canvas.toBlob(async (blob) => {
+                    if (blob) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const base64Data = e.target.result;
+                            
+                            // Mostrar preview
+                            showPhotoPreview(base64Data, 'Foto capturada con cámara');
+                            
+                            // Crear input hidden con los datos
+                            let hiddenInput = document.getElementById('captured-photo-data');
+                            if (!hiddenInput) {
+                                hiddenInput = document.createElement('input');
+                                hiddenInput.type = 'hidden';
+                                hiddenInput.id = 'captured-photo-data';
+                                hiddenInput.name = 'captured_photo';
+                                document.getElementById('student-form').appendChild(hiddenInput);
+                            }
+                            hiddenInput.value = base64Data;
+                            
+                            // Limpiar el input file para evitar conflictos
+                            const fileInput = document.getElementById('id_foto');
+                            if (fileInput) {
+                                fileInput.value = '';
+                            }
+                            
+                            showCameraMessage('¡Foto capturada exitosamente!', 'success');
+                            console.log('Foto capturada y procesada');
+                        };
+                        reader.readAsDataURL(blob);
+                    }
+                }, 'image/jpeg', 0.8);
+
+            } catch (error) {
+                console.error('Error al capturar foto:', error);
+                showCameraMessage('Error al capturar la foto', 'error');
+            }
+        }
+
+        function showCameraMessage(message, type = 'info') {
+            const messageDiv = document.getElementById('camera-message');
+            if (messageDiv) {
+                messageDiv.innerHTML = message;
+                messageDiv.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'}`;
+                messageDiv.style.display = 'block';
+                
+                // Auto-ocultar después de 5 segundos excepto para errores
+                if (type !== 'error') {
+                    setTimeout(() => {
+                        messageDiv.style.display = 'none';
+                    }, 5000);
+                }
+            }
+        }
+
+        // Inicialización cuando el DOM está listo
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded');
+            
+            // Preview de imagen desde archivo
+            const fotoInput = document.getElementById('id_foto');
+            if (fotoInput) {
+                fotoInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    
+                    if (file) {
+                        // Verificar que es una imagen
+                        if (!file.type.startsWith('image/')) {
+                            alert('Por favor, seleccione un archivo de imagen válido.');
+                            this.value = '';
+                            return;
+                        }
+
+                        // Verificar tamaño (5MB máximo)
+                        if (file.size > 5 * 1024 * 1024) {
+                            alert('El archivo es muy grande. El tamaño máximo es 5MB.');
+                            this.value = '';
+                            return;
+                        }
+
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            showPhotoPreview(e.target.result, 'Archivo: ' + file.name);
+                            
+                            // Limpiar el input de foto capturada
+                            const capturedInput = document.getElementById('captured-photo-data');
+                            if (capturedInput) {
+                                capturedInput.remove();
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        resetPhotoPreview();
+                    }
+                });
+            }
+
+            // Validación del formulario
+            const form = document.getElementById('student-form');
             if (form) {
                 form.addEventListener('submit', function(e) {
+                    const requiredFields = ['nombres', 'apellidos', 'email', 'curso'];
                     let isValid = true;
-                    const required = ['nombres', 'apellidos', 'email', 'curso'];
                     
-                    required.forEach(field => {
+                    // Verificar campos requeridos
+                    requiredFields.forEach(field => {
                         const input = document.getElementById(`id_${field}`);
                         if (input && !input.value.trim()) {
                             input.classList.add('is-invalid');
@@ -705,6 +1152,13 @@
                         alert('Por favor complete todos los campos obligatorios');
                     }
                 });
+            }
+        });
+
+        // Limpiar recursos al salir de la página
+        window.addEventListener('beforeunload', function() {
+            if (stream) {
+                stopCamera();
             }
         });
     </script>

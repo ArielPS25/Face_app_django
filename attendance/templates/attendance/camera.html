@@ -477,7 +477,7 @@
     <!-- Contenido principal -->
     <div class="main-container">
         <!-- Botón Regresar -->
-        <button class="btn-regresar" onclick="window.location.href='{% url 'attendance:home' %}'">Regresar</button>
+        <button class="btn-regresar" onclick="goBackHome()">Regresar</button>
         
         <div class="container">
             <!-- Header -->
@@ -509,6 +509,48 @@
                             <i class="fas fa-stop"></i>
                             Detener Detección
                         </button>
+                        <button id="cameraConfigBtn" class="btn btn-info" onclick="showCameraSelector()">
+                            <i class="fas fa-cog"></i>
+                            Configurar Cámara
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selector de cámaras -->
+            <div class="camera-device-selector" id="cameraDeviceSelector" style="display: none;">
+                <div class="control-panel" style="margin-bottom: 20px;">
+                    <div class="control-header">
+                        <i class="fas fa-video"></i>
+                        Selector de Cámara
+                    </div>
+                    <div class="control-content">
+                        <div style="margin-bottom: 15px;">
+                            <label class="form-label" style="margin-bottom: 8px; font-weight: 600; color: #495057; display: block;">
+                                <i class="fas fa-camera me-2"></i>
+                                Dispositivo de Cámara:
+                            </label>
+                            <select id="cameraDeviceSelect" class="form-select" style="padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; width: 100%; max-width: 400px;">
+                                <option value="">Detectando cámaras disponibles...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-buttons" style="gap: 10px;">
+                            <button id="switchCameraBtn" class="btn btn-info" onclick="switchMonitoringCamera()" style="padding: 8px 16px;">
+                                <i class="fas fa-sync-alt me-2"></i>
+                                Cambiar Cámara
+                            </button>
+                            <button id="refreshCameraBtn" class="btn btn-secondary" onclick="refreshMonitoringCameraList()" style="padding: 8px 16px;">
+                                <i class="fas fa-refresh me-2"></i>
+                                Actualizar Lista
+                            </button>
+                            <button id="hideSelectorBtn" class="btn btn-outline-secondary" onclick="hideCameraSelector()" style="padding: 8px 16px;">
+                                <i class="fas fa-eye-slash me-2"></i>
+                                Ocultar Selector
+                            </button>
+                        </div>
+                        
+                        <div id="cameraStatusMessage" style="margin-top: 10px; padding: 8px 12px; border-radius: 6px; display: none;"></div>
                     </div>
                 </div>
             </div>
@@ -640,6 +682,11 @@
     <script>
         let detectionInterval;
         let isRunning = false;
+        
+        // Variables para selector de cámaras
+        let availableMonitoringCameras = [];
+        let currentMonitoringCameraId = null;
+        let selectedCameraId = null;
 
         document.addEventListener('DOMContentLoaded', function() {
             updateStatus();
@@ -652,28 +699,54 @@
             detectionInterval = setInterval(updateStatus, 2000);
         });
 
-        function startDetection() {
-            fetch('{% url "attendance:start_detection" %}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Content-Type': 'application/json',
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
+        async function startDetection() {
+            try {
+                // Preparar datos para enviar incluyendo la cámara seleccionada
+                const requestData = {};
+                
+                if (selectedCameraId) {
+                    // Mapear deviceId a índice OpenCV
+                    const openCVIndex = await mapDeviceIdToOpenCVIndex(selectedCameraId);
+                    requestData.deviceId = openCVIndex.toString();
+                    
+                    const selectedCamera = availableMonitoringCameras.find(cam => cam.deviceId === selectedCameraId);
+                    if (selectedCamera) {
+                        showCameraStatusMessage(`Iniciando detección con: ${selectedCamera.label} (OpenCV índice: ${openCVIndex})`, 'info');
+                    }
+                }
+
+                const response = await fetch('{% url "attendance:start_detection" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const data = await response.json();
+                
                 if (data.status === 'started' || data.status === 'already_running') {
                     isRunning = true;
                     document.getElementById('cameraFeed').style.display = 'block';
                     document.getElementById('cameraPlaceholder').style.display = 'none';
                     document.getElementById('cameraOverlay').style.display = 'block';
                     updateUI();
+                    
+                    // Mostrar mensaje de éxito
+                    if (selectedCameraId && availableMonitoringCameras.length > 0) {
+                        const selectedCamera = availableMonitoringCameras.find(cam => cam.deviceId === selectedCameraId);
+                        if (selectedCamera) {
+                            showCameraStatusMessage(`✅ Detección activa con: ${selectedCamera.label}`, 'success');
+                        }
+                    } else {
+                        showCameraStatusMessage('✅ Detección iniciada con cámara por defecto', 'success');
+                    }
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Error:', error);
-                alert('Error al iniciar la detección de cámara');
-            });
+                showCameraStatusMessage('❌ Error al iniciar la detección: ' + error.message, 'error');
+            }
         }
 
         function stopDetection() {
@@ -797,12 +870,368 @@
             return cookieValue;
         }
 
-        // Limpiar al salir de la página
+        // Limpiar al salir de la página (navegador, botón atrás, etc.)
         window.addEventListener('beforeunload', function() {
+            // Detener la detección de cámara si está activa
+            if (isRunning) {
+                stopDetectionSync();
+            }
+            
+            // Limpiar intervalo
             if (detectionInterval) {
                 clearInterval(detectionInterval);
             }
         });
+        
+        // Detener detección de forma síncrona para beforeunload
+        function stopDetectionSync() {
+            // Usar sendBeacon para envío confiable durante beforeunload
+            const data = new FormData();
+            data.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+            
+            // sendBeacon es más confiable que fetch durante beforeunload
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon('{% url "attendance:stop_detection" %}', data);
+            } else {
+                // Fallback para navegadores que no soportan sendBeacon
+                fetch('{% url "attendance:stop_detection" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json',
+                    },
+                    keepalive: true  // Mantener la conexión durante unload
+                }).catch(() => {
+                    // Ignorar errores durante el unload
+                });
+            }
+            
+            console.log('Cámara detenida automáticamente al salir de la página');
+        }
+        
+        // También manejar el evento de cambio de página (para navegación SPA)
+        window.addEventListener('pagehide', function() {
+            if (isRunning) {
+                stopDetectionSync();
+            }
+        });
+        
+        // Manejar botón atrás del navegador específicamente
+        window.addEventListener('popstate', function() {
+            if (isRunning) {
+                stopDetectionSync();
+            }
+        });
+        
+        // Función para el botón "Regresar" - detiene la cámara antes de navegar
+        function goBackHome() {
+            if (isRunning) {
+                console.log('Deteniendo cámara antes de regresar...');
+                // Detener la detección primero
+                stopDetection();
+                
+                // Esperar un momento para que se procese la detención
+                setTimeout(() => {
+                    window.location.href = '{% url "attendance:home" %}';
+                }, 500);
+            } else {
+                // Si no está corriendo, navegar inmediatamente
+                window.location.href = '{% url "attendance:home" %}';
+            }
+        }
+
+        // ======== FUNCIONES PARA SELECTOR DE CÁMARAS ========
+        
+        // Mostrar el selector de cámaras
+        async function showCameraSelector() {
+            console.log('Mostrando selector de cámaras');
+            const selector = document.getElementById('cameraDeviceSelector');
+            
+            // Detectar cámaras disponibles
+            await detectAvailableMonitoringCameras();
+            
+            if (availableMonitoringCameras.length > 0) {
+                updateMonitoringCameraSelector();
+                selector.style.display = 'block';
+                showCameraStatusMessage('Selector de cámaras activado. Elija un dispositivo y haga clic en "Cambiar Cámara".', 'info');
+            } else {
+                showCameraStatusMessage('No se detectaron cámaras. Verifique que tenga dispositivos conectados.', 'error');
+            }
+        }
+
+        // Ocultar el selector de cámaras
+        function hideCameraSelector() {
+            const selector = document.getElementById('cameraDeviceSelector');
+            selector.style.display = 'none';
+            console.log('Selector de cámaras ocultado');
+        }
+
+        // Detectar cámaras disponibles para monitoreo
+        async function detectAvailableMonitoringCameras() {
+            try {
+                console.log('Detectando cámaras disponibles para monitoreo...');
+                showCameraStatusMessage('Detectando dispositivos de cámara...', 'info');
+                
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                availableMonitoringCameras = devices.filter(device => device.kind === 'videoinput');
+                
+                console.log('Cámaras detectadas:', availableMonitoringCameras);
+                
+                // Si no hay cámaras con etiquetas, solicitar permisos primero
+                if (availableMonitoringCameras.length > 0 && !availableMonitoringCameras[0].label) {
+                    try {
+                        showCameraStatusMessage('Solicitando permisos para obtener información de dispositivos...', 'info');
+                        const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                        tempStream.getTracks().forEach(track => track.stop());
+                        
+                        // Volver a detectar con permisos
+                        const devicesWithLabels = await navigator.mediaDevices.enumerateDevices();
+                        availableMonitoringCameras = devicesWithLabels.filter(device => device.kind === 'videoinput');
+                        console.log('Cámaras con etiquetas:', availableMonitoringCameras);
+                    } catch (e) {
+                        console.warn('No se pudieron obtener etiquetas de dispositivos:', e);
+                    }
+                }
+                
+                return availableMonitoringCameras;
+            } catch (error) {
+                console.error('Error detectando cámaras:', error);
+                showCameraStatusMessage('Error detectando cámaras: ' + error.message, 'error');
+                availableMonitoringCameras = [];
+                return [];
+            }
+        }
+
+        // Actualizar el selector de cámaras
+        function updateMonitoringCameraSelector() {
+            const select = document.getElementById('cameraDeviceSelect');
+            if (!select) return;
+            
+            // Limpiar opciones existentes
+            select.innerHTML = '';
+            
+            if (availableMonitoringCameras.length === 0) {
+                select.innerHTML = '<option value="">No se detectaron cámaras</option>';
+                return;
+            }
+            
+            // Agregar opción por defecto
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'Usar cámara predeterminada del sistema';
+            select.appendChild(defaultOption);
+            
+            // Agregar opciones de cámaras
+            availableMonitoringCameras.forEach((camera, index) => {
+                const option = document.createElement('option');
+                option.value = camera.deviceId;
+                
+                // Crear nombre descriptivo
+                let name = camera.label || `Cámara ${index + 1}`;
+                if (name.length > 60) {
+                    name = name.substring(0, 57) + '...';
+                }
+                
+                // Marcar problemas conocidos y cámaras preferidas
+                if (name.toLowerCase().includes('canon') || name.toLowerCase().includes('dslr')) {
+                    name += ' ⚠️ (Puede causar problemas)';
+                } else if (name.toLowerCase().includes('webcam') || name.toLowerCase().includes('usb')) {
+                    name += ' ✅ (Recomendada)';
+                }
+                
+                option.textContent = name;
+                option.selected = camera.deviceId === selectedCameraId;
+                select.appendChild(option);
+            });
+            
+            showCameraStatusMessage(`Se encontraron ${availableMonitoringCameras.length} cámara(s) disponible(s)`, 'success');
+        }
+
+        // Cambiar cámara para monitoreo
+        async function switchMonitoringCamera() {
+            const select = document.getElementById('cameraDeviceSelect');
+            if (!select) {
+                showCameraStatusMessage('Selector no encontrado', 'error');
+                return;
+            }
+            
+            const newDeviceId = select.value;
+            selectedCameraId = newDeviceId;
+            
+            console.log('Cambiando cámara de monitoreo a:', newDeviceId || 'predeterminada');
+            
+            // Si hay detección activa, reiniciarla con nueva cámara
+            if (isRunning) {
+                showCameraStatusMessage('Reiniciando detección con nueva cámara...', 'info');
+                
+                // Detener detección actual
+                await stopDetection();
+                
+                // Esperar un momento
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Iniciar con nueva cámara
+                await startDetection();
+            } else {
+                const cameraName = getCurrentMonitoringCameraName();
+                showCameraStatusMessage(`Cámara seleccionada: ${cameraName}. Inicie la detección para aplicar.`, 'success');
+            }
+        }
+
+        // Actualizar lista de cámaras para monitoreo
+        async function refreshMonitoringCameraList() {
+            showCameraStatusMessage('Actualizando lista de cámaras...', 'info');
+            
+            await detectAvailableMonitoringCameras();
+            updateMonitoringCameraSelector();
+            
+            if (availableMonitoringCameras.length > 0) {
+                showCameraStatusMessage(`Lista actualizada: ${availableMonitoringCameras.length} cámara(s) encontrada(s)`, 'success');
+            } else {
+                showCameraStatusMessage('No se encontraron cámaras. Verifique las conexiones USB.', 'error');
+            }
+        }
+
+        // Obtener nombre de cámara actual para monitoreo
+        function getCurrentMonitoringCameraName() {
+            if (!selectedCameraId) return 'Cámara predeterminada del sistema';
+            
+            const camera = availableMonitoringCameras.find(cam => cam.deviceId === selectedCameraId);
+            if (camera) {
+                let name = camera.label || 'Cámara desconocida';
+                if (name.length > 40) {
+                    name = name.substring(0, 37) + '...';
+                }
+                return name;
+            }
+            return 'Cámara seleccionada';
+        }
+
+        // Mostrar mensaje de estado de cámara
+        function showCameraStatusMessage(message, type = 'info') {
+            const messageDiv = document.getElementById('cameraStatusMessage');
+            if (!messageDiv) return;
+            
+            // Configurar estilos según el tipo
+            let backgroundColor, textColor, borderColor;
+            switch(type) {
+                case 'success':
+                    backgroundColor = '#d4edda';
+                    textColor = '#155724';
+                    borderColor = '#c3e6cb';
+                    break;
+                case 'error':
+                    backgroundColor = '#f8d7da';
+                    textColor = '#721c24';
+                    borderColor = '#f5c6cb';
+                    break;
+                case 'warning':
+                    backgroundColor = '#fff3cd';
+                    textColor = '#856404';
+                    borderColor = '#ffeaa7';
+                    break;
+                default: // info
+                    backgroundColor = '#d1ecf1';
+                    textColor = '#0c5460';
+                    borderColor = '#bee5eb';
+            }
+            
+            messageDiv.style.backgroundColor = backgroundColor;
+            messageDiv.style.color = textColor;
+            messageDiv.style.border = `1px solid ${borderColor}`;
+            messageDiv.textContent = message;
+            messageDiv.style.display = 'block';
+            
+            console.log(`Camera Status [${type.toUpperCase()}]:`, message);
+            
+            // Auto-ocultar después de 8 segundos excepto para errores
+            if (type !== 'error') {
+                setTimeout(() => {
+                    if (messageDiv.style.display !== 'none') {
+                        messageDiv.style.display = 'none';
+                    }
+                }, 8000);
+            }
+        }
+        
+        // Mapear deviceId del navegador a índice OpenCV
+        async function mapDeviceIdToOpenCVIndex(deviceId) {
+            try {
+                // Obtener información de cámaras desde el backend
+                const response = await fetch('{% url "attendance:enumerate_cameras" %}');
+                const data = await response.json();
+                
+                if (!data.cameras || data.cameras.length === 0) {
+                    console.warn('No se encontraron cámaras en el backend');
+                    return 0; // Usar cámara por defecto
+                }
+                
+                // Encontrar cámaras disponibles
+                const availableBackendCameras = data.cameras.filter(cam => cam.available);
+                console.log('Cámaras disponibles en backend:', availableBackendCameras);
+                
+                // Heurística simple: mapear por orden de detección
+                // Esto es una aproximación ya que la correspondencia exacta 
+                // entre deviceId y índice OpenCV es compleja
+                const deviceIndex = availableMonitoringCameras.findIndex(cam => cam.deviceId === deviceId);
+                
+                if (deviceIndex >= 0 && deviceIndex < availableBackendCameras.length) {
+                    const openCVIndex = availableBackendCameras[deviceIndex].index;
+                    console.log(`Mapeando deviceId ${deviceId} (posición ${deviceIndex}) a índice OpenCV ${openCVIndex}`);
+                    return openCVIndex;
+                }
+                
+                // Fallback: usar la primera cámara disponible
+                return availableBackendCameras[0]?.index || 0;
+                
+            } catch (error) {
+                console.error('Error mapeando deviceId a índice OpenCV:', error);
+                return 0; // Fallback a cámara por defecto
+            }
+        }
+
+        // Inicialización automática al cargar la página
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('Inicializando sistema de cámaras para monitoreo...');
+            
+            try {
+                // Detectar cámaras disponibles automáticamente
+                await detectAvailableMonitoringCameras();
+                
+                if (availableMonitoringCameras.length > 0) {
+                    updateMonitoringCameraSelector();
+                    
+                    // Seleccionar automáticamente la primera cámara estándar (no Canon/DSLR)
+                    const standardCamera = availableMonitoringCameras.find(camera => {
+                        const label = camera.label.toLowerCase();
+                        return !label.includes('canon') && 
+                               !label.includes('dslr') && 
+                               !label.includes('eos') &&
+                               (label.includes('webcam') || 
+                                label.includes('camera') || 
+                                label.includes('usb') || 
+                                label.includes('integrated'));
+                    });
+                    
+                    if (standardCamera) {
+                        selectedCameraId = standardCamera.deviceId;
+                        updateMonitoringCameraSelector();
+                        showCameraStatusMessage(`Cámara preferida seleccionada: ${standardCamera.label}`, 'success');
+                    } else if (availableMonitoringCameras.length > 0) {
+                        // Si no hay cámaras estándar, usar la primera disponible
+                        selectedCameraId = availableMonitoringCameras[0].deviceId;
+                        updateMonitoringCameraSelector();
+                        showCameraStatusMessage(`Cámara seleccionada: ${availableMonitoringCameras[0].label}`, 'info');
+                    }
+                } else {
+                    showCameraStatusMessage('No se detectaron cámaras. Use "Configurar Cámara" para buscar dispositivos.', 'warning');
+                }
+            } catch (error) {
+                console.error('Error en inicialización:', error);
+                showCameraStatusMessage('Error detectando cámaras: ' + error.message, 'error');
+            }
+        });
+        
     </script>
 </body>
 </html>

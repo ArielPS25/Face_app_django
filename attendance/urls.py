@@ -16,6 +16,7 @@ urlpatterns = [
     path('api/start-detection/', views.start_detection, name='start_detection'),
     path('api/stop-detection/', views.stop_detection, name='stop_detection'),
     path('api/detection-status/', views.detection_status, name='detection_status'),
+    path('api/enumerate-cameras/', views.enumerate_cameras, name='enumerate_cameras'),
     
     # Person management
     path('persons/', views.person_list, name='person_list'),

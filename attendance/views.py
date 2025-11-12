@@ -180,7 +180,7 @@ def verificar_mano_levantada(person_id):
     return False
 
 
-def start_camera():
+def start_camera(camera_device_id=None):
     """Start camera detection in background thread - improved version"""
     global camera, face_service, hand_service, is_camera_running, latest_frame, detection_results
     
@@ -188,7 +188,24 @@ def start_camera():
         return
     
     try:
-        camera = cv2.VideoCapture(0)
+        # Configurar la cámara basada en el device ID o usar la primera disponible
+        camera_index = 0
+        if camera_device_id:
+            try:
+                # El frontend ya mapea deviceId a índice OpenCV
+                camera_index = int(camera_device_id)
+                logger.info(f"Usando cámara con índice: {camera_index}")
+            except (ValueError, TypeError):
+                logger.warning(f"No se pudo convertir camera_device_id '{camera_device_id}' a índice, usando cámara por defecto")
+                camera_index = 0
+        
+        camera = cv2.VideoCapture(camera_index)
+        
+        # Verificar si se pudo abrir la cámara
+        if not camera.isOpened():
+            logger.warning(f"No se pudo abrir la cámara con índice {camera_index}, intentando con cámara por defecto")
+            camera = cv2.VideoCapture(0)
+        
         # Configuración optimizada para mejor FPS
         camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
@@ -393,7 +410,16 @@ def start_detection(request):
     global camera_thread, is_camera_running
     
     if not is_camera_running:
-        camera_thread = threading.Thread(target=start_camera)
+        # Obtener el deviceId de la cámara seleccionada desde el POST body
+        camera_device_id = None
+        if request.body:
+            try:
+                data = json.loads(request.body.decode('utf-8'))
+                camera_device_id = data.get('deviceId')
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                pass
+        
+        camera_thread = threading.Thread(target=start_camera, args=(camera_device_id,))
         camera_thread.daemon = True
         camera_thread.start()
         return JsonResponse({'status': 'started'})
@@ -420,6 +446,48 @@ def detection_status(request):
         'participation_today': list(detection_results['participation_today']),
         'faces_detected': len(detection_results['faces']),
         'hands_detected': len([h for h in detection_results['hands'] if h['raised']])
+    })
+
+
+@csrf_exempt 
+def enumerate_cameras(request):
+    """Enumerate available cameras for OpenCV mapping"""
+    cameras = []
+    
+    # Intentar hasta 10 índices de cámara
+    for i in range(10):
+        try:
+            cap = cv2.VideoCapture(i)
+            if cap.isOpened():
+                # Obtener información básica de la cámara
+                width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+                height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+                fps = cap.get(cv2.CAP_PROP_FPS)
+                
+                cameras.append({
+                    'index': i,
+                    'width': int(width) if width > 0 else None,
+                    'height': int(height) if height > 0 else None,
+                    'fps': int(fps) if fps > 0 else None,
+                    'available': True
+                })
+                cap.release()
+            else:
+                # Agregar entrada para índice no disponible
+                cameras.append({
+                    'index': i,
+                    'available': False
+                })
+        except Exception as e:
+            cameras.append({
+                'index': i,
+                'available': False,
+                'error': str(e)
+            })
+    
+    return JsonResponse({
+        'cameras': cameras,
+        'total_available': len([c for c in cameras if c.get('available', False)])
     })
 
 
@@ -491,17 +559,56 @@ def student_register(request):
                     # Guardar estudiante
                     student = form.save()
                     
-                    # Procesar foto si se subió
+                    # Procesar foto (archivo o capturada)
                     foto = form.cleaned_data.get('foto')
-                    if foto:
-                        # Crear PersonImage
+                    captured_photo = request.POST.get('captured_photo')
+                    
+                    # Manejar foto capturada con cámara
+                    if captured_photo and captured_photo.startswith('data:image'):
+                        try:
+                            # Procesar imagen base64
+                            import base64
+                            from django.core.files.base import ContentFile
+                            from io import BytesIO
+                            
+                            # Extraer datos de la imagen
+                            format_type, imgstr = captured_photo.split(';base64,')
+                            ext = format_type.split('/')[-1]
+                            
+                            # Convertir base64 a archivo
+                            img_data = base64.b64decode(imgstr)
+                            img_file = ContentFile(img_data)
+                            
+                            # Generar nombre de archivo
+                            filename = f"{student.nombres}_{student.apellidos}_camera.{ext}"
+                            filename = filename.replace(' ', '_')
+                            
+                            # Crear PersonImage con foto capturada
+                            person_image = PersonImage.objects.create(
+                                person=student,
+                                is_primary=True
+                            )
+                            person_image.image.save(filename, img_file, save=True)
+                            
+                        except Exception as e:
+                            logger.error(f"Error procesando foto capturada: {e}")
+                            messages.warning(request, 
+                                f'Error procesando la foto capturada. Estudiante registrado sin foto.')
+                            person_image = None
+                    
+                    # Manejar foto subida como archivo
+                    elif foto:
+                        # Crear PersonImage con archivo subido
                         person_image = PersonImage.objects.create(
                             person=student,
                             image=foto,
                             is_primary=True
                         )
-                        
-                        # Generar encoding facial
+                    else:
+                        person_image = None
+                    
+                    # Generar encoding facial si hay una imagen
+                    if person_image:
                         try:
                             global face_service
                             if not face_service:
@@ -515,9 +622,10 @@ def student_register(request):
                                 # Recargar el servicio para incluir el nuevo encoding
                                 face_service.load_encodings()
                                 
+                                foto_source = "capturada con cámara" if captured_photo else "subida"
                                 messages.success(request, 
                                     f'¡Estudiante {student.nombre_completo} matriculado exitosamente! '
-                                    f'Reconocimiento facial configurado.')
+                                    f'Reconocimiento facial configurado (foto {foto_source}).')
                             else:
                                 messages.warning(request, 
                                     f'Estudiante {student.nombre_completo} matriculado, pero no se pudo '
